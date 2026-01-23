@@ -8,12 +8,12 @@ def parse_cities():
             echo=True,
             pool_pre_ping=True
             )
-    users = pd.read_csv("../data/users_data.csv", encoding="cp1251", sep=';')
+    users = pd.read_csv("data/users_data.csv", encoding="cp1251", sep=';')
     users = users[users["citizenship_country_nm"] == "РФ"]
     users = users[users["lvn_state_nm"] != "0"]
     users = users.drop(columns=["Unnamed: 0", "gender_cd", "citizenship_country_nm", "first_bank_product_date", "first_session_dttm", "risk_level_cd"])
 
-    with open("../data/all_cities.txt", "r") as file:
+    with open("data/all_cities.txt", "r", encoding="utf-8") as file:
         all_cities = file.read().splitlines()
     
     for index, row in users.iterrows():
@@ -22,6 +22,6 @@ def parse_cities():
     
     users.rename(columns={"party_rk": "user_id", "monthly_income_amt": "income", "lvn_state_nm": "region"}, inplace=True)
     print(users)
-    users.to_sql("users", engine, if_exists="append")
+    users.to_sql("users", engine, if_exists="append", index=False)
 
-parse_cities()
+
