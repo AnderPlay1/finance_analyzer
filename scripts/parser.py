@@ -62,7 +62,15 @@ def parse_transactions() -> None:
         sep=';',
         dtype=str
     )
-
+    transactions["transaction_amt_rur"] = (
+        transactions["transaction_amt_rur"]
+        .astype(str)
+        .str.replace(" ", "", regex=False)
+            .str.replace(",", ".", regex=False)
+            .str.replace("—", "", regex=False)
+            .str.replace("None", "", regex=False)
+            .str.replace("nan", "", regex=False)
+    )
     transactions = transactions.drop(columns=[
         "Unnamed: 0", "account_rk", "financial_account_type_cd",
         "financial_account_subtype_cd", "transaction_type_cd",
@@ -83,6 +91,7 @@ def parse_transactions() -> None:
         transactions["real_transaction_dttm"],
         errors="coerce"
     ).dt.date
+    transactions = transactions.dropna(subset=["real_transaction_dttm"])
 
     transactions.rename(columns={
         "party_rk": "user_id",
@@ -94,7 +103,10 @@ def parse_transactions() -> None:
     print(transactions.dtypes)
     print(transactions.head())
 
-    # transactions.to_sql("transactions", engine, if_exists="append", index=False)
+    transactions.to_sql("transactions", engine,
+                        if_exists="append", index=False)
 
 
-parse_transactions()
+def parse_all() -> None:
+    parse_cities()
+    parse_transactions()

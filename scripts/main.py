@@ -1,4 +1,5 @@
-import parser, init_db
+import parser
+import init_db
 
 init_db.init_db()
-parser.parse_cities()
+parser.parse_all()
