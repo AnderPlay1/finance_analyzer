@@ -4,15 +4,13 @@ from sqlalchemy import (
     create_engine,
     Integer,
     String,
-    ForeignKey,
     Date,
     Numeric
 )
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
-    mapped_column,
-    relationship
+    mapped_column
 )
 
 DATABASE_URL = "mysql+pymysql://user:password@localhost:3306/mydb"

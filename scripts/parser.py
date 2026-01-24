@@ -4,12 +4,26 @@ from sqlalchemy import create_engine
 
 
 def trim_quantile(df, col, q) -> pd.DataFrame:
+    '''
+    Чистит выбросы датасета, убирая верхние и нижние 5% данных.
+
+    :param df: Датафрейм для очистки -> pd.DataFrame
+    :param col: Название колонки, по который производится выброс -> string
+    :param q: Процент выброса (в десятичном виде) -> float
+
+    :return: Очищенный датафрейм
+    :rtype: DataFrame
+    '''
     low = df[col].quantile(q)
     high = df[col].quantile(1 - q)
     return df[(df[col] >= low) & (df[col] <= high)]
 
 
 def parse_cities() -> None:
+    '''
+    Читает данные из users_data.csv, форматирует и добавляет в базу данных
+
+    '''
     engine = create_engine(
         "mysql+pymysql://user:password@localhost:3306/mydb",
         echo=True,
@@ -50,6 +64,10 @@ def parse_cities() -> None:
 
 
 def parse_transactions() -> None:
+    '''
+    Читает данные из all_user_transactions.csv, форматирует и добавляет в базу данных
+
+    '''
     engine = create_engine(
         "mysql+pymysql://user:password@localhost:3306/mydb",
         echo=True,
@@ -102,11 +120,13 @@ def parse_transactions() -> None:
 
     print(transactions.dtypes)
     print(transactions.head())
-
     transactions.to_sql("transactions", engine,
                         if_exists="append", index=False)
 
 
 def parse_all() -> None:
+    """
+    Функция, вызов который запускает парсер
+    """
     parse_cities()
     parse_transactions()
