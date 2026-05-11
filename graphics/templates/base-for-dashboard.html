@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/group.css') }}" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.3/purify.min.js"></script>
+    <script type="module">
+        import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+        document.querySelectorAll('.markdown').forEach((e) => {
+            e.innerHTML = DOMPurify.sanitize(marked.parse(e.innerText));
+        });
+    </script>
+    <style>
+        .profile-card,
+        .additional-info {
+            width: 100%;
+            margin-bottom: 20px;
+            /* Устанавливаем одинаковое расстояние между элементами */
+        }
+
+        .additional-info {
+            margin-top: 20px;
+            /* Устанавливаем одинаковое расстояние между элементами */
+        }
+
+        .achievements-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            justify-items: center   ;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .achievement-card {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 15px;
+            width: 30%;
+            height: 300px;
+            /* Фиксированная высота карточки */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+            /* Добавлено для переноса текста */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /* Добавлено для равномерного распределения */
+        }
+
+        .achievement-card h4 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .achievement-card .level {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+            /* Расстояние 10px вверх от прогресс бара */
+        }
+
+        .progress-bar {
+            background-color: #f3f3f3;
+            display: block;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 20px;
+            margin-bottom: 10px;
+            /* Расстояние 10px над progress text */
+            position: relative;
+            /* Добавлено для фиксированного положения */
+        }
+
+        .progress {
+            background-color: #4caf50;
+            height: 100%;
+            /* Исправлено для заполнения всей высоты */
+            position: absolute;
+            /* Добавлено для фиксированного положения */
+        }
+
+        .progress-text {
+            font-size: 14px;
+            text-align: center;
+            color: black;
+            position: absolute;
+            width: 100%;
+            line-height: 20px;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <div class="container-fluid">
+                <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+                    data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    Главная
+                    <i class="fa fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <div class="collapse navbar-collapse" id="navbarResponsive">
+                            <ul class="navbar-nav text-uppercase ml-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link js-scroll-trigger" href="/">Главная</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </ul>
+                    <ul class="navbar-nav text-uppercase ml-auto">
+                        {% if user %}
+                        <li class="nav-item">
+                            <a class="nav-link js-scroll-trigger" href="/dashboard">Личный кабинет</a>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link js-scroll-trigger" href="/sign-in">Войти</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link js-scroll-trigger" href="/sign-up">Регистрация</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+
+</html>

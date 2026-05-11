@@ -1,0 +1,165 @@
+.bd-placeholder-img {
+    font-size: 1.125rem;
+    text-anchor: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+@media (min-width: 768px) {
+    .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+    }
+}
+
+.secondary-navbar {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e7e7e7;
+    position: fixed;
+    width: 100%;
+    top: 86px; /* Adjust this value if needed to avoid overlap */
+    z-index: 1030; /* Ensure it appears above other content */
+}
+
+.secondary-navbar .nav-link {
+    color: #555;
+}
+
+.secondary-navbar .nav-link:hover {
+    color: #000;
+}
+
+.secondary-navbar .nav-link.active {
+    font-weight: bold;
+    color: #000;
+}
+
+.secondary-navbar .navbar-text {
+    margin-left: auto;
+    color: #555;
+}
+
+.secondary-navbar .course-id {
+    color: #aaa;
+    margin-left: 10px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    /* padding-top: 112px; Adjust this value to account for both navbars */
+}
+
+main {
+    flex: 1;
+}
+
+.footer-distributed {
+    background-color: #292c2f;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.section-content {
+    display: none;
+}
+
+.section-content.active {
+    display: block;
+}
+
+.main-content {
+    padding-top: 50px; /* Adjust this value to reduce the space */
+}
+
+.tooltip-inner {
+    background-color: #000;
+    color: #fff;
+}
+
+.button {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    border: 1px solid #ccc; /* Light gray border */
+    cursor: pointer;
+    overflow: hidden;
+    outline: none;
+}
+
+.button:hover {
+    border: 1px solid #ccc; /* Ensure the border remains on hover */
+}
+
+.custom-tooltip {
+    position: absolute;
+    background-color: #000;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    display: none;
+    z-index: 1050;
+}
+.table th,
+.table td {
+    color: #333;
+    /* Make the text darker */
+}
+.table th:first-child,
+.table td:first-child {
+    width: 50px;
+    /* Set a fixed width for the first column */
+}
+.card-deadline {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 14px;
+    color: #888;
+}
+
+.card-id {
+    position: absolute;
+    top: 30px;
+    right: 10px;
+    font-size: 14px;
+    color: #888;
+}
+.btn-card {
+    background-color: #828d99;
+    border-color: #828d99; /* Initial border color */
+    border: 1px solid #828d99 !important; /* Убедитесь, что граница сохраняется */
+}
+
+.btn-card:hover {
+    background-color: #fff;
+    border-color: #828d99 !important; /* Keep border on hover - !important is crucial */
+    border: 1px solid #828d99 !important; /* Убедитесь, что граница сохраняется */
+}
+.solved-tasks {
+    display: none;
+}
+
+.card-body:hover .solved-tasks {
+    display: inline;
+}
+
+.card-body:hover .default-tasks {
+    display: none;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1050;
+    text-align: center;
+}

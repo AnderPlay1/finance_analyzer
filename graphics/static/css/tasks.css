@@ -1,0 +1,35 @@
+.nav-link {
+    text-align: center;
+    font-size: 3em;
+}
+
+main {
+    margin-left: 10vh;
+    margin-top: 14vh;
+}
+.task-text {
+    margin-top: 40px;
+    color: black;
+    font-size: 1.2em;
+}
+
+.button {
+  margin: auto;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.button:hover {
+  background-color: #black; /* Green */
+  color: white;
+}
+
+.num {
+    font-size: 25px;
+}

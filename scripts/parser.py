@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
+
+from scripts.init_db import engine
+
+
+def get_engine() -> Engine:
+    """
+    Получение SQLAlchemy Engine для подключения к базе данных.
+    :return: SQLAlchemy Engine
+    """
+    return engine
 
 
 def trim_quantile(df, col, q) -> pd.DataFrame:
@@ -21,23 +31,19 @@ def trim_quantile(df, col, q) -> pd.DataFrame:
 
 def parse_cities() -> None:
     '''
-    Читает данные из users_data.csv, форматирует и добавляет в базу данных
-
+    Читает данные из users_data.csv, форматирует и добавляет в базу данных.
+    Пользователи из CSV не содержат пароль, поэтому поле password_hash остаётся пустым.
     '''
-    engine = create_engine(
-        "mysql+pymysql://user:password@localhost:3306/mydb",
-        echo=True,
-        pool_pre_ping=True
-    )
+    engine = get_engine()
     users = pd.read_csv("data/users_data.csv", encoding="cp1251", sep=';')
     users["monthly_income_amt"] = (
         users["monthly_income_amt"]
         .astype(str)
         .str.replace(" ", "", regex=False)
-            .str.replace(",", ".", regex=False)
-            .str.replace("—", "", regex=False)
-            .str.replace("None", "", regex=False)
-            .str.replace("nan", "", regex=False)
+        .str.replace(",", ".", regex=False)
+        .str.replace("—", "", regex=False)
+        .str.replace("None", "", regex=False)
+        .str.replace("nan", "", regex=False)
     )
     users["monthly_income_amt"] = pd.to_numeric(
         users["monthly_income_amt"], errors="coerce"
@@ -45,8 +51,14 @@ def parse_cities() -> None:
     users = users[users["monthly_income_amt"] >= 0]
     users = users[users["citizenship_country_nm"] == "РФ"]
     users = users[users["lvn_state_nm"] != "0"]
-    users = users.drop(columns=["Unnamed: 0", "gender_cd", "citizenship_country_nm",
-                       "first_bank_product_date", "first_session_dttm", "risk_level_cd"])
+    users = users.drop(columns=[
+        "Unnamed: 0",
+        "gender_cd",
+        "citizenship_country_nm",
+        "first_bank_product_date",
+        "first_session_dttm",
+        "risk_level_cd",
+    ])
 
     users = trim_quantile(users, "monthly_income_amt", 0.05)
     with open("data/all_cities.txt", "r", encoding="utf-8") as file:
@@ -57,46 +69,51 @@ def parse_cities() -> None:
             if j in row["lvn_state_nm"]:
                 users.at[index, "lvn_state_nm"] = j
 
-    users.rename(columns={"party_rk": "user_id", "monthly_income_amt": "income",
-                 "lvn_state_nm": "region"}, inplace=True)
+    users.rename(
+        columns={
+            "party_rk": "user_id",
+            "monthly_income_amt": "income",
+            "lvn_state_nm": "region",
+        },
+        inplace=True,
+    )
     print(users)
     users.to_sql("users", engine, if_exists="append", index=False)
 
 
 def parse_transactions() -> None:
     '''
-    Читает данные из all_user_transactions.csv, форматирует и добавляет в базу данных
-
+    Читает данные из all_user_transactions.csv, форматирует и добавляет в базу данных.
     '''
-    engine = create_engine(
-        "mysql+pymysql://user:password@localhost:3306/mydb",
-        echo=True,
-        pool_pre_ping=True
-    )
+    engine = get_engine()
 
     transactions = pd.read_csv(
         "data/all_user_transactions.csv",
         encoding="cp1251",
         sep=';',
-        dtype=str
+        dtype=str,
     )
     transactions["transaction_amt_rur"] = (
         transactions["transaction_amt_rur"]
         .astype(str)
         .str.replace(" ", "", regex=False)
-            .str.replace(",", ".", regex=False)
-            .str.replace("—", "", regex=False)
-            .str.replace("None", "", regex=False)
-            .str.replace("nan", "", regex=False)
+        .str.replace(",", ".", regex=False)
+        .str.replace("—", "", regex=False)
+        .str.replace("None", "", regex=False)
+        .str.replace("nan", "", regex=False)
     )
     transactions = transactions.drop(columns=[
-        "Unnamed: 0", "account_rk", "financial_account_type_cd",
-        "financial_account_subtype_cd", "transaction_type_cd",
-        "brand_nm", "loyalty_accrual_rub_amt", "utilization_flg"
+        "Unnamed: 0",
+        "account_rk",
+        "financial_account_type_cd",
+        "financial_account_subtype_cd",
+        "transaction_type_cd",
+        "brand_nm",
+        "loyalty_accrual_rub_amt",
+        "utilization_flg",
     ])
 
     transactions = transactions[transactions["loyalty_cashback_category_nm"] != "0"]
-
     transactions["transaction_amt_rur"] = pd.to_numeric(
         transactions["transaction_amt_rur"], errors="coerce"
     )
@@ -107,26 +124,33 @@ def parse_transactions() -> None:
 
     transactions["real_transaction_dttm"] = pd.to_datetime(
         transactions["real_transaction_dttm"],
-        errors="coerce"
+        errors="coerce",
     ).dt.date
     transactions = transactions.dropna(subset=["real_transaction_dttm"])
 
-    transactions.rename(columns={
-        "party_rk": "user_id",
-        "transaction_amt_rur": "amount",
-        "loyalty_cashback_category_nm": "category",
-        "real_transaction_dttm": "transaction_date"
-    }, inplace=True)
+    transactions.rename(
+        columns={
+            "party_rk": "user_id",
+            "transaction_amt_rur": "amount",
+            "loyalty_cashback_category_nm": "category",
+            "real_transaction_dttm": "transaction_date",
+        },
+        inplace=True,
+    )
 
     print(transactions.dtypes)
     print(transactions.head())
-    transactions.to_sql("transactions", engine,
-                        if_exists="append", index=False)
+    transactions.to_sql(
+        "transactions",
+        engine,
+        if_exists="append",
+        index=False,
+    )
 
 
 def parse_all() -> None:
     """
-    Функция, вызов который запускает парсер
+    Функция, вызов которой запускает парсер.
     """
     parse_cities()
     parse_transactions()

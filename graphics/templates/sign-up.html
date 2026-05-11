@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>СДАЙ ЕГЭ</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/лого.jpg') }}" type="image/x-icon" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sign-in.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.3/purify.min.js"></script>
+    <script type="module">
+      import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+      document.querySelectorAll('.markdown').forEach((e) => {
+        e.innerHTML = DOMPurify.sanitize(marked.parse(e.innerText));
+      });
+    </script>
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Roboto:500);
+      body {
+        font-family: "Roboto";
+      }
+      .detail {
+        margin: 0;
+        padding-left: 5px;
+        border: solid gold 3px;
+        background-color: beige;
+      }
+      .google-btn {
+        width: 100%;
+        height: 42px;
+        background-color: #4285f4;
+        border-radius: 2px;
+        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.25);
+        display: block;
+
+      }
+      .google-btn .google-icon-wrapper {
+        position: absolute;
+        margin-top: 1px;
+        margin-left: 1px;
+        width: 40px;
+        height: 40px;
+        border-radius: 2px;
+        background-color: #fff;
+      }
+      .google-btn .google-icon {
+        position: absolute;
+        margin-top: 11px;
+        margin-left: 11px;
+        width: 18px;
+        height: 18px;
+      }
+      .google-btn .btn-text {
+        text-align: center;
+        margin: 11px 0;
+        color: #fff;
+        font-size: 14px;
+        letter-spacing: 0.2px;
+        font-family: "Roboto";
+      }
+      .google-btn:hover {
+        box-shadow: 0 0 6px #4285f4;
+      }
+      .google-btn:active {
+        background: #1669f2;
+      }
+
+    .back-button {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: #077B88;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .back-button:hover {
+      background-color: #055f66;
+    }
+
+    .back-button svg {
+      margin-right: 5px;
+    }
+    .alert {
+        color: red;
+    }
+    </style>
+</head>
+<body>
+  <a href="/" class="back-button">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" d="M15 8a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 0 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 0 1 .708.708L2.707 7.5H14.5A.5.5 0 0 1 15 8z"/>
+    </svg>
+    Вернуться на главную
+  </a>
+
+  <div class="container">
+    <!-- Title section -->
+    <div class="title">Регистрация</div>
+    <div class="content">
+      <!-- Registration form -->
+      <form action="{{ url_for('sign_up') }}" method="post">
+        <div class="user-details">
+          <!-- Input for Full Name -->
+          <div class="input-box">
+            <label for="name" class="details">Фaмилия</label>
+            <input type="text" name="surname" id="surname" placeholder="Иванов" required>
+          </div>
+          <div class="input-box">
+            <label for="name" class="details">Имя</label>
+            <input type="text" name="name" id="name" placeholder="Иван" required>
+          </div>
+	  <div class="input-box">
+            <label for="name" class="details">Отчество</label>
+            <input type="text" name="patronymic" id="patronymic" placeholder="Иванович" required>
+          </div>
+          <!-- Input for Email -->
+          <div class="input-box">
+            <label for="email" class="details">Почта</label>
+            <input type="email" name="email" id="email" placeholder="Введите свою почту" required>
+          </div>
+          <!-- Input for Phone Number -->
+          <div class="input-box">
+            <label for="telephone" class="details">Номер телефона</label>
+            <input type="tel" name="telephone" id="telephone" placeholder="Введите ваш номер телефона" required>
+          </div>
+	  <div class="input-box">
+              <label for="age" class="details">Сколько вам полных лет?</label>
+              <input min="14" max="120" name="age" id="age" type="number" placeholder="От 14 до 120" required>
+          </div>
+        </div>
+
+
+          <!-- Input for Password -->
+          <div class="user-details">
+          <div class="input-box">
+            <label for="password" class="details">Пароль</label>
+            <input type="password" name="password" id="password" placeholder="Введите пароль" required>
+          </div>
+          <!-- Input for Confirm Password -->
+          <div class="input-box">
+            <label class="details">Повтор пароля</label>
+            <input type="password" placeholder="Повторно введите пароль" required>
+          </div>
+        </div>
+
+	<fieldset style="border: none;">
+	  <legend>Ваша роль</legend>
+
+          <div>
+	    <span class="meow">
+              <input type="radio" id="student" name="role" value="student">
+              <label for="student" style="display: inline;"> Ученик </label>
+	    </span>
+
+	    <span class="meow">
+              <input type="radio" id="teacher" name="role" value="teacher">
+              <label for="teacher"> Учитель </label>
+	    </span>
+          </div>
+        </fieldset>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <!-- Оаус -->
+<!--        <a href="/login" class="google-btn">-->
+<!--          <div class="google-icon-wrapper">-->
+<!--            <img class="google-icon"-->
+<!--              src="https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA" />-->
+<!--          </div>-->
+<!--          <p class="btn-text"><b>Sign in with google</b></p>-->
+<!--        </a>-->
+        <!-- Submit button -->
+
+        <div class="button">
+          <input type="submit" value="Зарегистрироваться">
+        </div>
+        <div class="login-link">
+            Уже есть аккаунт? <a href="{{ url_for('sign_in') }}">Войти</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

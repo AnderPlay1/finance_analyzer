@@ -1,0 +1,956 @@
+/* Основные стили для тела страницы */
+body {
+    background-color: #fffaf4;
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+
+}
+
+/* Навигационная панель */
+.navbar {
+    background-color: #292c2f;
+    padding: 10px 20px;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.navbar-logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+}
+
+.navbar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navbar-menu li {
+    margin-left: 20px;
+}
+
+.navbar-menu a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.navbar-menu a:hover {
+    color: #ff6f61;
+}
+
+/* Контент */
+.content {
+    max-width: 1500px;
+    margin: 150px auto;
+    padding: 0 20px;
+    min-width: 1200px;
+}
+
+/* Стили для списка тем */
+.topics-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.topic-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.topic-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.topic-card h2 {
+    margin-top: 0;
+    color: #292c2f;
+    font-size: 1.5em;
+}
+
+.topic-card p {
+    color: #555;
+    line-height: 1.6;
+}
+
+.topic-card small {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.topic-card a {
+    color: #292c2f;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.topic-card a:hover {
+    color: #0097a8;
+}
+
+/* Стили для списка комментариев */
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.comment-card {
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.comment-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.comment-card p {
+    margin: 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.comment-card small {
+    color: #666;
+    font-size: 0.8em;
+}
+
+/* Стили для формы */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #292c2f;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #ff6f61;
+    outline: none;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+.btn {
+    background-color: #292c2f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0097a8;
+}
+
+/* Стили для кнопок удаления */
+a {
+    color: #d9534f;
+    text-decoration: none;
+    font-size: 0.9em;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #ff6f61;
+    text-decoration: underline;
+}
+
+.add-comment {
+    width: 100%;
+    margin-top: 2000px;
+}
+
+/* Стили для главной темы */
+.main-topic {
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    border-left: 5px solid #0097a8;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-topic::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(#0097a8, #0097a8, #0097a8);
+}
+
+.topic-title {
+    color: #292c2f;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.topic-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.topic-content {
+    font-size: 1.1em;
+    line-height: 1.8;
+    color: #444;
+    padding: 20px;
+    background: rgba(0, 151, 168, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 151, 168, 0.15);
+}
+
+.comments-heading {
+    color: #292c2f;
+    font-size: 1.8em;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+/* Анимация для плавного появления */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main-topic {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Добавьте это в конец файла styles.css */
+
+.comments-list {
+    margin-bottom: 40px; /* Отступ после списка комментариев */
+}
+
+.comment-form {
+    margin-top: 30px;
+    background: #f9f9f9;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.comment-form textarea {
+    margin-bottom: 15px; /* Отступ между полем и кнопкой */
+    min-height: 100px;
+}
+
+.btn-primary {
+    display: block;
+    width: 200px;
+    margin: 20px auto 0; /* Центрирование кнопки */
+    background: linear-gradient(#0097a8, #0097a8, #0097a8);
+    border: none;
+    transition: transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: scale(1.05);
+}
+
+/* Улучшение отступов для комментариев */
+.comment-card {
+    padding: 20px;
+    background: white;
+    border: 1px solid #eee;
+}
+
+.comment-card:last-child {
+    margin-bottom: 0;
+}
+
+/* Дополнительные отступы для заголовков */
+h2.comments-heading {
+    margin: 40px 0 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #0097a8;
+}
+
+.topic-meta {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.topic-meta span {
+    background: rgba(0, 151, 168, 0.1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.topic-meta span::before {
+    content: "•";
+    margin-right: 8px;
+    color: #0097a8;
+}
+
+/* Стили админ-панели */
+.admin-container {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    width: 90%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.admin-topic {
+    margin-bottom: 30px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+    background: white;
+}
+
+.topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.topic-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.4em;
+}
+
+.delete-btn {
+    background: #e74c3c;
+    color: white !important;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+.delete-btn:hover {
+    background: #c0392b;
+    text-decoration: none;
+}
+
+.topic-comments {
+    margin-top: 20px;
+    padding-left: 20px;
+    border-left: 3px solid #3498db;
+}
+
+.admin-comment {
+    background: #f8f9fa;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 6px;
+    transition: transform 0.2s;
+}
+
+.admin-comment:hover {
+    transform: translateX(10px);
+}
+
+.comment-meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+.comment-meta a {
+    color: #e74c3c !important;
+    margin-left: auto;
+}
+
+.no-comments {
+    color: #95a5a6;
+    font-style: italic;
+    margin: 15px 0;
+}
+
+/* Стили для формы создания темы */
+.form-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 120px);
+    padding: 40px 20px;
+}
+
+.create-topic-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.create-topic-card:hover {
+    transform: translateY(-5px);
+}
+
+.form-title {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 2.2em;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.form-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #0097a8;
+    margin: 15px auto 0;
+}
+
+.topic-form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.animated-input {
+    position: relative;
+    padding-top: 20px;
+}
+
+.animated-input input,
+.animated-input textarea {
+    width: 100%;
+    padding: 15px 0;
+    border: none;
+    border-bottom: 2px solid #eee;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: transparent;
+    resize: vertical;
+}
+
+.animated-input textarea {
+    min-height: 100px;
+}
+
+.animated-input label {
+    position: absolute;
+    left: 0;
+    top: 30px;
+    color: #999;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.animated-input .underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    background: #0097a8;
+    transition: all 0.3s ease;
+}
+
+/* Анимация при фокусе */
+.animated-input input:focus ~ label,
+.animated-input input:valid ~ label,
+.animated-input textarea:focus ~ label,
+.animated-input textarea:valid ~ label {
+    top: 0;
+    font-size: 12px;
+    color: #0097a8;
+}
+
+.animated-input input:focus ~ .underline,
+.animated-input textarea:focus ~ .underline {
+    width: 100%;
+}
+
+.submit-btn {
+    background: linear-gradient(#0097a8, #0097a8, #0097a8);
+    color: white;
+    border: none;
+    padding: 18px 35px;
+    border-radius: 50px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px auto 0;
+    transition: all 0.3s ease;
+    width: fit-content;
+    box-shadow: 0 5px 15px rgba(0, 151, 168,0.3);
+}
+
+.submit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 151, 168,0.4);
+}
+
+.btn-text {
+    letter-spacing: 0.5px;
+}
+
+.btn-icon {
+    font-size: 1.2em;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #292c2f, #3a3f42);
+    color: white;
+    padding: 80px 20px;
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.hero-section::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    right: -30px;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 111, 97, 0.1);
+    border-radius: 30px;
+    transform: rotate(45deg);
+}
+
+.hero-title {
+    font-size: 2.8em;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-subtitle {
+    font-size: 1.2em;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Topics Grid */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.topics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.topics-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.8em;
+}
+
+.new-topic-btn {
+    background: #0097a8;
+    color: white !important;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.3s ease;
+}
+
+.new-topic-btn:hover {
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+.topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 30px;
+    padding: 20px 0;
+}
+
+/* Topic Card */
+.topic-card {
+    width: 100%
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    max-width: none;
+}
+
+.topic-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.topic-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.topic-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.topic-author {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+.topic-date {
+    font-size: 0.8em;
+    color: #95a5a6;
+}
+
+.topic-id {
+    color: #0097a8;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.topic-card-body {
+    margin-bottom: 20px;
+}
+
+.topic-title {
+    margin: 0 0 15px 0;
+    font-size: 1.3em;
+}
+
+.topic-title a {
+    color: #2c3e50;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.topic-title a:hover {
+    color: #0097a8;
+}
+
+.topic-excerpt {
+    color: #7f8c8d;
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.topic-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.comments-link {
+    color: #0097a8 !important;
+    text-decoration: none;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.topic-category {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+}
+
+/* Адаптивные медиа-запросы */
+@media (min-width: 1200px) {
+    .topics-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .content {
+        width: 95%;
+        padding: 10px;
+    }
+
+    .topic-card {
+        padding: 15px;
+    }
+}
+
+/* Стили для личного кабинета */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.profile-title {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.profile-status {
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+.profile-status.teacher {
+    background: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+}
+
+.profile-status.student {
+    background: rgba(52, 152, 219, 0.15);
+    color: #3498db;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    display: flex;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(#2c4a4d, #0097a8, #0097a8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-initials {
+    color: white;
+    font-size: 3em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.edit-btn {
+    background: none;
+    border: 2px solid #0097a8;
+    color: black;
+    padding: 10px 25px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+    background: #0097a8;
+    color: white;
+}
+
+.profile-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.info-item {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.info-label {
+    display: block;
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.2em;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.additional-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.stats-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.stats-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.stat-value {
+    color: #ff6f61;
+    font-weight: bold;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .profile-card {
+        flex-direction: column;
+        padding: 25px;
+    }
+
+    .profile-title {
+        font-size: 2em;
+    }
+
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .info-value {
+        font-size: 1em;
+    }
+}
