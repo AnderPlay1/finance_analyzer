@@ -265,8 +265,15 @@ a:hover {
 
 /* Анимация для плавного появления */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .main-topic {
@@ -276,7 +283,8 @@ a:hover {
 /* Добавьте это в конец файла styles.css */
 
 .comments-list {
-    margin-bottom: 40px; /* Отступ после списка комментариев */
+    margin-bottom: 40px;
+    /* Отступ после списка комментариев */
 }
 
 .comment-form {
@@ -288,14 +296,16 @@ a:hover {
 }
 
 .comment-form textarea {
-    margin-bottom: 15px; /* Отступ между полем и кнопкой */
+    margin-bottom: 15px;
+    /* Отступ между полем и кнопкой */
     min-height: 100px;
 }
 
 .btn-primary {
     display: block;
     width: 200px;
-    margin: 20px auto 0; /* Центрирование кнопки */
+    margin: 20px auto 0;
+    /* Центрирование кнопки */
     background: linear-gradient(#0097a8, #0097a8, #0097a8);
     border: none;
     transition: transform 0.2s ease;
@@ -445,7 +455,7 @@ h2.comments-heading {
     padding: 40px;
     width: 90%;
     max-width: 800px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     transform: translateY(0);
     transition: transform 0.3s ease;
 }
@@ -519,17 +529,17 @@ h2.comments-heading {
 }
 
 /* Анимация при фокусе */
-.animated-input input:focus ~ label,
-.animated-input input:valid ~ label,
-.animated-input textarea:focus ~ label,
-.animated-input textarea:valid ~ label {
+.animated-input input:focus~label,
+.animated-input input:valid~label,
+.animated-input textarea:focus~label,
+.animated-input textarea:valid~label {
     top: 0;
     font-size: 12px;
     color: #0097a8;
 }
 
-.animated-input input:focus ~ .underline,
-.animated-input textarea:focus ~ .underline {
+.animated-input input:focus~.underline,
+.animated-input textarea:focus~.underline {
     width: 100%;
 }
 
@@ -548,12 +558,12 @@ h2.comments-heading {
     margin: 20px auto 0;
     transition: all 0.3s ease;
     width: fit-content;
-    box-shadow: 0 5px 15px rgba(0, 151, 168,0.3);
+    box-shadow: 0 5px 15px rgba(0, 151, 168, 0.3);
 }
 
 .submit-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 151, 168,0.4);
+    box-shadow: 0 8px 20px rgba(0, 151, 168, 0.4);
 }
 
 .btn-text {
@@ -629,7 +639,7 @@ h2.comments-heading {
     padding: 20px;
     background: white;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
 .topics-header h2 {
@@ -664,21 +674,20 @@ h2.comments-heading {
 
 /* Topic Card */
 .topic-card {
-    width: 100%
-    background: white;
+    width: 100% background: white;
     border-radius: 15px;
     padding: 25px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     max-width: none;
 }
 
 .topic-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .topic-card-header {
@@ -687,7 +696,7 @@ h2.comments-heading {
     align-items: center;
     margin-bottom: 15px;
     padding-bottom: 15px;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .topic-meta {
@@ -745,7 +754,7 @@ h2.comments-heading {
     justify-content: space-between;
     align-items: center;
     padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .comments-link {
@@ -825,7 +834,7 @@ h2.comments-heading {
     background: white;
     border-radius: 20px;
     padding: 40px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     display: flex;
     gap: 40px;
     margin-bottom: 30px;
@@ -893,6 +902,14 @@ h2.comments-heading {
     font-size: 1.2em;
     color: #2c3e50;
     margin: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+}
+
+.info-value.editable {
+    border: 1px solid #ccc;
+    background: white;
 }
 
 .additional-info {
@@ -905,7 +922,7 @@ h2.comments-heading {
     background: white;
     padding: 25px;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .stats-card h3 {

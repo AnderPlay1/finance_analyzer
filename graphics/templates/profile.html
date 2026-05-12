@@ -6,11 +6,17 @@
 <div class="profile-container">
     <div class="profile-header">
         <h1 class="profile-title">👤 Личный кабинет</h1>
-        <!-- Доп инфа о user'e (как в сдай егэ был справа сверху препод/ученик) -->
-<!--        <div class="profile-status {% if user.is_teacher %}teacher{% else %}student{% endif %}">-->
-<!--            {{ 'Учитель' if user.is_teacher else 'Ученик' }}-->
-<!--        </div>-->
     </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-info" role="alert">
+        {% for message in messages %}
+        <div>{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
     <div class="profile-card">
         <div class="avatar-section">
@@ -22,123 +28,79 @@
                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 {% endif %}
             </div>
+            <button class="edit-btn" id="edit-btn">Редактировать</button>
             <form action="/logout">
                 <button class="edit-btn"> Выйти </button>
             </form>
         </div>
 
         <div class="profile-info">
-            <div class="info-item">
-                <span class="info-label">📛 ФИО:</span>
-                <p class="info-value">{{ user.last_name }} {{ user.first_name }} {{ user.middle_name }}</p>
-            </div>
+            <form method="post" action="/dashboard">
+                <div class="info-item">
+                    <span class="info-label">ФИО:</span>
+                    <input class="info-value" type="text" name="full_name"
+                        value="{{ (user.last_name or '') + ' ' + (user.first_name or '') + ' ' + (user.middle_name or '') }}"
+                        readonly />
+                </div>
 
-            <div class="info-item">
-                <span class="info-label">✉️ Эл. почта:</span>
-                <p class="info-value">{{ user.email }}</p>
-            </div>
-    <!-- Статус user'а -->
-<!--            <div class="info-item">-->
-<!--                <span class="info-label">🎓 Статус:</span>-->
-<!--                <p class="info-value">{{ 'Преподаватель' if user.is_teacher == 1 else 'Обучающийся' }}</p>-->
-<!--            </div>-->
-            <div class="info-item">
-                <span class="info-label">🌌 ID пользователя:</span>
-                <p class="info-value">{{user.id}}</p>
-            </div>
+                <div class="info-item">
+                    <span class="info-label">Эл. почта:</span>
+                    <input class="info-value" type="email" name="email" value="{{ user.email or '' }}" required
+                        readonly />
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Регион проживания:</span>
+                    <input class="info-value" type="text" name="region" id="region_input"
+                        value="{{ user.region_label or user.region or '' }}" list="regions-list" readonly />
+                    <datalist id="regions-list">
+                        {% for code, label in regions %}
+                        <option value="{{ label }}">
+                            {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Заработная плата:</span>
+                    <input class="info-value" type="number" name="income" step="0.01" value="{{ user.income or '' }}"
+                        readonly />
+                </div>
+
+                <div class="info-item">
+                    <span class="info-label">Ваш ID:</span>
+                    <p class="info-value">{{ user.user_id or user.id }}</p>
+                </div>
+
+                <button class="edit-btn" type="submit" id="save-btn" style="display: none;">Сохранить изменения</button>
+            </form>
         </div>
     </div>
-
-    <!-- График (столбчатый) -->
-    <div class="additional-info">
-        <div class="stats-card">
-            <h3>📊 Активность</h3>
-            <div>
-                <canvas id="tasksChart"></canvas>
-            </div>
-            <script>
-                // Данные из Flask-приложения
-                const labels = {{ labels | safe }};
-                const correctData = {{ correct | safe }};
-                const incorrectData = {{ incorrect | safe }};
-
-                // Настройки диаграммы
-                const ctx = document.getElementById('tasksChart').getContext('2d');
-                const tasksChart = new Chart(ctx, {
-                    type: 'bar', // столбчатая диаграмма
-                    data: {
-                        labels: labels, // Категории (месяцы)
-                        datasets: [
-                            {
-                                label: 'Правильные задачи',
-                                data: correctData, // Данные для правильных задач
-                                backgroundColor: 'rgba(75, 192, 192, 0.5)', // Цвет для столбцов
-                                borderColor: 'rgba(75, 192, 192, 1)', // Цвет рамки
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Неправильные задачи',
-                                data: incorrectData, // Данные для неправильных задач
-                                backgroundColor: 'rgba(255, 99, 132, 0.5)', // Цвет для столбцов
-                                borderColor: 'rgba(255, 99, 132, 1)', // Цвет рамки
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true, // Диаграмма адаптируется к размеру окна
-                        plugins: {
-                            legend: {
-                                position: 'top', // Легенда сверху
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function (context) {
-                                        return `${context.dataset.label}: ${context.raw}`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: '№ Задачи', // Подпись для оси X
-                                }
-                            },
-                            y: {
-                                beginAtZero: true, // Начало оси Y с 0
-                                title: {
-                                    display: true,
-                                    text: 'Количество задач', // Подпись для оси Y
-                                }
-                            }
-                        }
-                    }
-                });
-            </script>
-        </div>
-    </div>
-
-
-<!--    Плашка для достяг -->
-<!--    <div class="additional-info">-->
-<!--        <div class="stats-card">-->
-<!--            <h3>🏆 Достижения</h3>-->
-<!--            <div class="achievements-container">-->
-<!--                {% for award in awards %}-->
-<!--                <div class="achievement-card">-->
-<!--                    <h4>{{ award[0] | safe }}</h4>-->
-<!--                    <p class="level">Уровень: {{ award[2] }}</p>-->
-<!--                    <div class="progress-bar">-->
-<!--                        <div class="progress" style="width: {{ (award[1] / award[3]) * 100 }}%;"></div>-->
-<!--                        <p class="progress-text">{{ award[1] }}/{{ award[3] }}</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                {% endfor %}-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-
 </div>
+
+<script>
+    document.getElementById('edit-btn').addEventListener('click', function () {
+        const inputs = document.querySelectorAll('.info-value');
+        const saveBtn = document.getElementById('save-btn');
+        const editBtn = document.getElementById('edit-btn');
+
+        if (editBtn.textContent === 'Редактировать') {
+            // Включить редактирование
+            inputs.forEach(input => {
+                input.removeAttribute('readonly');
+                input.classList.add('editable');
+            });
+            saveBtn.style.display = 'inline-block';
+            editBtn.textContent = 'Отменить';
+        } else {
+            // Отменить редактирование
+            inputs.forEach(input => {
+                input.setAttribute('readonly', true);
+                input.classList.remove('editable');
+            });
+            saveBtn.style.display = 'none';
+            editBtn.textContent = 'Редактировать';
+        }
+    });
+</script>
+
 {% endblock %}

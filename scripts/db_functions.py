@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import and_, case, func, select
+from sqlalchemy import Float, and_, case, func, select
 
 from scripts.init_db import SessionLocal, Transaction, User
 
@@ -48,9 +48,9 @@ def count_percentile(user_id) -> float:
                         age_group_expr == age_group,
                         User.income.between(
                             # type: ignore[operator]
-                            user.income * Decimal("0.9"),
+                            user.income * float("0.9"),
                             # type: ignore[operator]
-                            user.income * Decimal("1.1"),
+                            user.income * float("1.1"),
                         ),
                         User.region == user.region,
                     )
@@ -122,6 +122,59 @@ def get_all_users() -> list[User]:
         session.close()
 
 
+def get_user_by_email(email: str) -> User | None:
+    """
+    Получает пользователя по email.
+    :param email: str
+    :return: User или None
+    """
+    session = next(get_db())
+    try:
+        return session.query(User).filter_by(email=email).first()
+    finally:
+        session.close()
+
+
+def update_user_info(old_email: str, values: dict) -> bool:
+    """
+    Обновляет поля пользователя и сохраняет изменения в базе.
+    :param old_email: str
+    :param values: dict
+    :return: bool
+    """
+    session = next(get_db())
+    try:
+        user = session.query(User).filter_by(email=old_email).first()
+        if not user:
+            return False
+
+        new_email = values.get('email', '').strip()
+        if new_email and new_email != old_email:
+            existing = session.query(User).filter_by(email=new_email).first()
+            if existing:
+                return False
+            user.email = new_email
+
+        user.first_name = values.get('first_name', '').strip()
+        user.last_name = values.get('last_name', '').strip()
+        user.middle_name = values.get('middle_name', '').strip()
+        user.region = values.get('region', '').strip()
+
+        income_value = values.get('income', '').strip()
+        if income_value:
+            try:
+                user.income = float(income_value)
+            except Exception:
+                return False
+        else:
+            user.income = 0.0
+
+        session.commit()
+        return True
+    finally:
+        session.close()
+
+
 def add_user(response: dict) -> None:
     """
     Добавляет нового пользователя в базу данных.
@@ -139,6 +192,9 @@ def add_user(response: dict) -> None:
             email=response["email"],
             is_admin=False,
             confirmed=False,
+            age=response.get("age"),
+            income=response.get("income"),
+            region=response.get("region"),
         )
         new_user.set_password(response["password"])
         session.add(new_user)

@@ -5,11 +5,61 @@ from flask_mail import Mail, Message
 from itsdangerous import BadTimeSignature, SignatureExpired, URLSafeTimedSerializer
 from scripts.db_functions import (
     add_user,
+    get_user_by_email,
     is_confirmed,
     is_existing,
     is_password_correct,
     set_confirmed,
+    update_user_info,
 )
+
+REGION_MAP_FILE = 'data/regions_mapping.txt'
+
+
+def load_region_map():
+    """Загружает отображение код-region -> человекочитаемое название."""
+    mapping = []
+    with open(REGION_MAP_FILE, 'r', encoding='utf-8') as f:
+        for line in f:
+            parts = line.strip().split('|', 1)
+            if len(parts) == 2:
+                code, label = parts
+                mapping.append((code.strip(), label.strip()))
+    return mapping
+
+
+REGION_MAP = load_region_map()
+REGION_LABEL_BY_CODE = {code: label for code, label in REGION_MAP}
+REGION_CODE_BY_LABEL = {label: code for code, label in REGION_MAP}
+
+
+def load_regions():
+    """Возвращает список пар (code, label) для шаблонов."""
+    return REGION_MAP
+
+
+def normalize_region(region_value: str) -> str:
+    region_value = (region_value or '').strip()
+    if not region_value:
+        return ''
+    if region_value in REGION_CODE_BY_LABEL:
+        return region_value
+    if region_value in REGION_LABEL_BY_CODE:
+        return REGION_LABEL_BY_CODE[region_value]
+    upper_value = region_value.upper()
+    if upper_value in REGION_CODE_BY_LABEL:
+        return upper_value
+    if upper_value in REGION_LABEL_BY_CODE:
+        return REGION_LABEL_BY_CODE[upper_value]
+    for label, code in REGION_LABEL_BY_CODE.items():
+        if label.upper() == upper_value:
+            return code
+    return upper_value
+
+
+def get_region_label(region_code: str) -> str:
+    return REGION_LABEL_BY_CODE.get((region_code or '').strip(), region_code or '')
+
 
 load_dotenv()
 
@@ -102,22 +152,52 @@ def index():
     return render_template('main.html', user=user)
 
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 @auth
 def dashboard():
     """
     Страница профиля пользователя.
     :return: Рендеринг шаблона profile.html с данными пользователя
     """
-    user = {
-        "last_name": "Иванов",
-        "first_name": "Иван",
-        "middle_name": "Иванович",
-        "email": session.get("email"),
-        "id": "1",
-        "avatar": None
-    }
-    return render_template('profile.html', user=user)
+    user = get_user_by_email(session.get("email"))
+    if not user:
+        session.pop("email", None)
+        return redirect(url_for('sign_in'))
+
+    if request.method == 'POST':
+        form_email = request.form.get('email', '').strip()
+        full_name = request.form.get('full_name', '').strip()
+        if full_name:
+            parts = full_name.split()
+            last_name = parts[0] if len(parts) > 0 else ''
+            first_name = parts[1] if len(parts) > 1 else ''
+            middle_name = ' '.join(parts[2:]) if len(parts) > 2 else ''
+        else:
+            last_name = request.form.get('last_name', '')
+            first_name = request.form.get('first_name', '')
+            middle_name = request.form.get('middle_name', '')
+        updated = update_user_info(session["email"], {
+            'first_name': first_name,
+            'last_name': last_name,
+            'middle_name': middle_name,
+            'email': form_email,
+            'region': normalize_region(request.form.get('region', '')),
+            'income': request.form.get('income', ''),
+        })
+
+        if not updated:
+            flash(
+                'Не удалось сохранить данные. Возможно, email уже занят или введены некорректные значения.')
+            return redirect(url_for('dashboard'))
+
+        session["email"] = form_email
+        flash('Данные профиля успешно сохранены.')
+        return redirect(url_for('dashboard'))
+
+    setattr(user, 'avatar', None)
+    region_label = get_region_label(user.region)
+    setattr(user, 'region_label', region_label)
+    return render_template('profile.html', user=user, regions=load_regions())
 
 
 @app.route('/sign-in', methods=['GET', 'POST'])
@@ -172,7 +252,7 @@ def sign_up():
             print(f"Error sending email: {e}")
             flash('Регистрация успешна, но письмо подтверждения не удалось отправить.')
 
-    return render_template('sign-up.html', user=1)
+    return render_template('sign-up.html', user=1, regions=load_regions())
 
 
 @app.route('/confirm/<token>')
@@ -211,4 +291,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5000, debug=True)
