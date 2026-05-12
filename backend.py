@@ -39,6 +39,13 @@ def load_regions():
 
 
 def normalize_region(region_value: str) -> str:
+    """
+    Нормализует значение региона, пытаясь сопоставить его с известными кодами и названиями.
+    :param region_value: str - Входное значение региона, которое может быть кодом
+    или человекочитаемым названием
+    :return: str - Нормализованное значение региона (код или человекочитаемое название) 
+    или исходное значение, если сопоставление не удалось
+    """
     region_value = (region_value or '').strip()
     if not region_value:
         return ''
@@ -58,17 +65,22 @@ def normalize_region(region_value: str) -> str:
 
 
 def get_region_label(region_code: str) -> str:
+    """
+    Получает человекочитаемое название региона по его коду.
+    :param region_code: str - Код региона
+    :return: str - Человекочитаемое название региона или код, если название не найдено
+    """
     return REGION_LABEL_BY_CODE.get((region_code or '').strip(), region_code or '')
 
 
 load_dotenv()
 
-template_dir = "graphics/templates"
-static_dir = "graphics/static"
+TEMPLATE_DIR = "graphics/templates"
+STATIC_DIR = "graphics/static"
 app = Flask(
     __name__,
-    template_folder=template_dir,
-    static_folder=static_dir,
+    template_folder=TEMPLATE_DIR,
+    static_folder=STATIC_DIR,
     static_url_path="/static",
 )
 
@@ -187,7 +199,9 @@ def dashboard():
 
         if not updated:
             flash(
-                'Не удалось сохранить данные. Возможно, email уже занят или введены некорректные значения.')
+                '''Не удалось сохранить данные. Возможно, email уже занят 
+                или введены некорректные значения.'''
+            )
             return redirect(url_for('dashboard'))
 
         session["email"] = form_email
