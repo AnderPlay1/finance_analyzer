@@ -87,7 +87,11 @@ app = Flask(
 
 @app.route("/static/fonts/<path:filename>")
 def serve_font(filename):
-    """Отдаёт шрифты из новой папки graphics/fonts."""
+    """
+    Отдаёт шрифты из новой папки graphics/fonts.
+    :param filename: str - Имя файла шрифта
+    :return: Ответ с файлом шрифта или 404, если файл не найден
+    """
     return send_from_directory("graphics/fonts", filename)
 
 
@@ -112,6 +116,29 @@ mail = Mail(app)
 
 # Инициализация сериализатора для токенов
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+
+@app.before_request
+def require_auth():
+    """
+    Проверка авторизации перед каждым запросом.
+    Если пользователь не авторизован —
+    редирект на /sign-up
+    """
+
+    allowed_routes = [
+        'sign_up',
+        'sign_in',
+        'confirm_email',
+        'static',
+        'serve_font'
+    ]
+
+    if request.endpoint in allowed_routes:
+        return
+
+    if "email" not in session:
+        return redirect(url_for('sign_in'))
 
 
 @app.errorhandler(404)
@@ -157,11 +184,11 @@ def index():
     Главная страница сайта.
     :return: Рендеринг шаблона main.html
     """
-    if "email" in session:
-        user = 1
-    else:
-        user = 0
-    return render_template('main.html', user=user)
+    chart_data = {
+        "labels": ["Python", "JavaScript", "C++", "Java"],
+        "values": [40, 30, 15, 15]
+    }
+    return render_template('main.html', chart_data=chart_data, user="email" in session)
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])

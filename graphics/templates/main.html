@@ -1,9 +1,44 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div id="page-top" class="politics_version">
-        <center><h1>123123</h1></center>
-    </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="chart-container">
+    <canvas id="myPieChart"></canvas>
+</div>
+
+<script>
+    const labels = {{ chart_data['labels']| tojson }};
+    const values = {{ chart_data['values']| tojson }};
+
+
+    const ctx = document.getElementById('myPieChart');
+
+    new Chart(ctx, {
+        type: 'pie',
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                label: 'Количество',
+
+                data: values,
+
+                backgroundColor: [
+                    '#36A2EB',
+                    '#FF6384',
+                    '#FFCE56',
+                    '#4BC0C0'
+                ],
+
+                borderWidth: 1
+            }]
+        },
+
+        options: {
+            responsive: true
+        }
+    });
+</script>
 {% endblock %}
-
-
