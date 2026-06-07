@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import Float, and_, case, func, select
+from sqlalchemy import and_, case, extract, func, select
 
 from scripts.init_db import SessionLocal, Transaction, User
 
@@ -18,8 +18,7 @@ def get_db():
         session.close()
 
 
-#
-def count_percentile(user_id) -> float:
+def count_percentile(user_id, month) -> float:
     """
     Вычисляет процент пользователей, у которых траты меньше или 
     равны тратам данного пользователя, среди пользователей из той же возрастной группы, 
@@ -30,35 +29,7 @@ def count_percentile(user_id) -> float:
     """
     session = next(get_db())
     try:
-        user = session.execute(select(User).where(
-            User.user_id == user_id)).scalar_one()
-        age_group = define_age_group(user.age)
-
-        age_group_expr = case(
-            (User.age <= 26, 0),
-            (User.age <= 35, 1),
-            (User.age <= 45, 2),
-            else_=3,
-        ).label("age_group")
-
-        group = (
-            session.execute(
-                select(User).where(
-                    and_(
-                        age_group_expr == age_group,
-                        User.income.between(
-                            # type: ignore[operator]
-                            user.income * float("0.9"),
-                            # type: ignore[operator]
-                            user.income * float("1.1"),
-                        ),
-                        User.region == user.region,
-                    )
-                )
-            )
-            .scalars()
-            .all()
-        )
+        group = get_user_group(user_id)
 
         if not group:
             return 0.0
@@ -66,30 +37,74 @@ def count_percentile(user_id) -> float:
         user_spendings = (
             session.scalar(
                 select(func.sum(Transaction.amount)).where(
-                    Transaction.user_id == user_id
+                    Transaction.user_id == user_id,
+                    extract("month", Transaction.transaction_date) == month
                 )
             )
             or 0
         )
 
-        user_ids = [u.user_id for u in group]
+        group_query = select(
+            Transaction.user_id,
+            func.sum(Transaction.amount).label('total')
+        ).where(
+                Transaction.user_id.in_(group),
+                extract("month", Transaction.transaction_date) == month
+        ).group_by(Transaction.user_id)
+
         spendings_map = {
             row.user_id: (row.total or 0)
-            for row in session.execute(
-                select(
-                    Transaction.user_id,
-                    func.sum(Transaction.amount).label("total"),
-                )
-                .where(Transaction.user_id.in_(user_ids))
-                .group_by(Transaction.user_id)
-            ).all()
+            for row in session.execute(group_query).all()
         }
 
-        below = 0
-        for member in group:
-            member_spendings = spendings_map.get(member.user_id, 0)
-            if member_spendings <= user_spendings:
-                below += 1
+        below = sum(
+            1 for uid in group
+            if spendings_map.get(uid, 0) <= user_spendings
+        )
+
+        return round(below / len(group) * 100, 2)
+    finally:
+        session.close()
+
+
+def count_percentile_by_category(user_id, month, category):
+    session = next(get_db())
+    try:
+
+        group = get_user_group(user_id)
+
+        if not group:
+            return 0.0
+
+        user_spendings = (
+            session.scalar(
+                select(func.sum(Transaction.amount)).where(
+                    Transaction.user_id == user_id,
+                    extract("month", Transaction.transaction_date) == month,
+                    Transaction.category == category
+                )
+            )
+            or 0
+        )
+
+        group_query = select(
+            Transaction.user_id,
+            func.sum(Transaction.amount).label('total')
+        ).where(
+                Transaction.user_id.in_(group),
+                extract("month", Transaction.transaction_date) == month,
+                Transaction.category == category
+        ).group_by(Transaction.user_id)
+
+        spendings_map = {
+            row.user_id: (row.total or 0)
+            for row in session.execute(group_query).all()
+        }
+
+        below = sum(
+            1 for uid in group
+            if spendings_map.get(uid, 0) <= user_spendings
+        )
 
         return round(below / len(group) * 100, 2)
     finally:
@@ -104,11 +119,41 @@ def define_age_group(age) -> int:
     """
     if age <= 26:
         return 0
-    if age <= 35:
-        return 1
     if age <= 45:
+        return 1
+    if age <= 60:
         return 2
     return 3
+
+
+
+def get_user_group(user_id):
+    '''
+    user_id пользоавтелей в том же регионе, возрастной группе 
+    и в диапазоне ±10% от зарплаты
+    '''   
+    session = next(get_db())
+    try:
+        user = session.execute(select(User).where(User.user_id == user_id)).scalar_one()
+
+        age_group = define_age_group(user.age)
+
+        age_group_expr = case(
+            (User.age <= 26, 0),
+            (User.age <= 45, 1),
+            (User.age <= 60, 2),
+            else_=3
+        ).label('age_group')
+   
+        return session.execute(select(User.user_id).where(and_(
+            age_group_expr == age_group,
+            User.income.between(
+            user.income * Decimal("0.9"),   # type: ignore[operator]
+            user.income * Decimal("1.1")),  # type: ignore[operator]
+        User.region == user.region))
+        ).scalars().all()
+    finally:
+        session.close()
 
 
 def get_all_users() -> list[User]:
