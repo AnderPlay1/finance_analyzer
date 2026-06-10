@@ -307,14 +307,9 @@ def is_password_correct(email: str, password: str) -> bool:
 
 
 def big_spending(user_id, month) -> list:
-    session = next(get_db())
-
     categories = ["Красота", "Фастфуд", "Электроника и техника", "Рестораны", "Автоуслуги", "Животные", "Одежда и обувь", "Транспорт", "Цифровые товары", "Различные товары", "Развлечения", "НКО", "Дом и ремонт", "Канцтовары", "Турагенства", "Местный транспорт", "Отели", "Цветы", "Сувениры", "Ж/д билеты", "Частные услуги", "Спорттовары", "Детские товары", "Фото и видео"]
-    try:
-        overspending = []
-        for i in categories:
-            if count_percentile_by_category(user_id, month, i) >= 50:
-                overspending.append(i)
-        return overspending
-    finally:
-        session.close()
+    overspending = []
+    for i in categories:
+        if count_percentile_by_category(user_id, month, i) >= 50:
+            overspending.append(i)
+    return overspending
