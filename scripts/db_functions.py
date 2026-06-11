@@ -3,6 +3,7 @@ from decimal import Decimal
 from sqlalchemy import and_, case, extract, func, select
 
 from scripts.init_db import SessionLocal, Transaction, User
+from typing import Dict
 
 
 def get_db():
@@ -307,9 +308,42 @@ def is_password_correct(email: str, password: str) -> bool:
 
 
 def big_spending(user_id, month) -> list:
-    categories = ["Красота", "Фастфуд", "Электроника и техника", "Рестораны", "Автоуслуги", "Животные", "Одежда и обувь", "Транспорт", "Цифровые товары", "Различные товары", "Развлечения", "НКО", "Дом и ремонт", "Канцтовары", "Турагенства", "Местный транспорт", "Отели", "Цветы", "Сувениры", "Ж/д билеты", "Частные услуги", "Спорттовары", "Детские товары", "Фото и видео"]
+    categories = ['Транспорт', 'Ж/д билеты', 'Косметика', 'Рестораны', 'Различные товары', 'Образование', 'Авиабилеты', 'Металлы', 'Фото и видео', 'Местный транспорт', 'Турагентства', 'Животные', 'Азартные игры и лотереи', 'Одежда и обувь', 'Каршеринг', 'Автоуслуги', 'Маркетплейсы', 'Проценты', 'Госуслуги', 'Социальные сети', 'Наличные', 'Благотворительность', 'Эл. кошельки и переводы', 'Такси', 'Кино', 'Сетевой маркетинг', 'Зарядка электромобилей', 'Фастфуд', 'Развлечения', 'Duty Free', 'Красота', 'Детские товары', 'Онлайн-кинотеатры', 'Книги', 'Сервис', 'Отели', 'Другое', 'Частные услуги', 'Телевидение', 'Бонусы', 'Аренда авто', 'Экосистема Сбер', 'Музыка', 'НКО', 'Электроника и техника', 'Искусство', 'Телефония', 'Канцтовары', 'Платные дороги', 'Сувениры', 'Дом и ремонт', 'Интернет', 'Цифровые товары', 'Кредиты', 'Цветы', 'Соцвыплаты и пенсии', 'Финансы', 'Спорттовары', 'Дивиденды', 'ЖКХ', 'Экосистема Яндекс', 'Услуги банка']
     overspending = []
     for i in categories:
         if count_percentile_by_category(user_id, month, i) >= 50:
             overspending.append(i)
     return overspending
+
+
+def categories_share(user_id, month) -> Dict:
+    '''
+    Функция для подсчёта доли каждой категории среди всех расходов в рамках одного месяца
+    '''
+    session = next(get_db())
+
+    try:
+        result = session.execute(
+            select(
+                Transaction.category,
+                func.coalesce(func.sum(Transaction.amount), 0).label("cat_sum")
+            )
+            .where(
+                Transaction.user_id == user_id,
+                extract("month", Transaction.transaction_date) == month,
+            )
+            .group_by(Transaction.category)
+        ).all()
+
+        total = sum(r.cat_sum for r in result)
+
+        shares: Dict[str, float] = {}
+        if total == 0:
+            return shares
+        for r in result:
+            shares[r.category] = round(r.cat_sum / total, 4)
+
+        return shares
+
+    finally:
+        session.close()
