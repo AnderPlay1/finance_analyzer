@@ -310,11 +310,32 @@ def is_password_correct(email: str, password: str) -> bool:
 def big_spending(user_id, month) -> list:
     categories = ['Транспорт', 'Ж/д билеты', 'Косметика', 'Рестораны', 'Различные товары', 'Образование', 'Авиабилеты', 'Металлы', 'Фото и видео', 'Местный транспорт', 'Турагентства', 'Животные', 'Азартные игры и лотереи', 'Одежда и обувь', 'Каршеринг', 'Автоуслуги', 'Маркетплейсы', 'Проценты', 'Госуслуги', 'Социальные сети', 'Наличные', 'Благотворительность', 'Эл. кошельки и переводы', 'Такси', 'Кино', 'Сетевой маркетинг', 'Зарядка электромобилей', 'Фастфуд', 'Развлечения', 'Duty Free', 'Красота', 'Детские товары', 'Онлайн-кинотеатры', 'Книги', 'Сервис', 'Отели', 'Другое', 'Частные услуги', 'Телевидение', 'Бонусы', 'Аренда авто', 'Экосистема Сбер', 'Музыка', 'НКО', 'Электроника и техника', 'Искусство', 'Телефония', 'Канцтовары', 'Платные дороги', 'Сувениры', 'Дом и ремонт', 'Интернет', 'Цифровые товары', 'Кредиты', 'Цветы', 'Соцвыплаты и пенсии', 'Финансы', 'Спорттовары', 'Дивиденды', 'ЖКХ', 'Экосистема Яндекс', 'Услуги банка']
     overspending = []
-    for i in categories:
-        if count_percentile_by_category(user_id, month, i) >= 50:
-            overspending.append(i)
+    for cat in categories:
+        percentile = count_percentile_by_category(user_id, month, cat)
+
+        if percentile > 50:
+            reduction = float(category_spendings(user_id, month, cat)) * float(percentile-50) / 100
+            if reduction > 0:
+                overspending.append({
+                    "category": cat,
+                    "reduction": round(reduction, 2)
+                })
     return overspending
 
+
+def category_spendings(user_id, month, category) -> float:
+    '''
+    Подсчёт трат в категории за месяц
+    '''
+    session = next(get_db())
+    try:
+        return session.scalar(
+                select(func.sum(Transaction.amount)).
+                where(Transaction.user_id == user_id,
+                      extract("month", Transaction.transaction_date) == month,
+                      Transaction.category == category)) or 0
+    finally:
+        session.close()
 
 def categories_share(user_id, month) -> Dict:
     '''
