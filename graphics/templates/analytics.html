@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+
+{% set total_percentile_width = [total_percentile, 100] | min %}
+{% set total_delta = user_total - group_avg_total %}
+
+<div class="analytics-container">
+    <div class="analytics-header">
+        <div>
+            <h1 class="analytics-title">Подробный анализ трат</h1>
+            <p class="analytics-subtitle">
+                Сравнение ваших расходов с пользователями из похожей группы за выбранный месяц
+            </p>
+        </div>
+
+        <form class="period-controls" method="get" action="{{ url_for('analytics') }}" id="analytics-period-form">
+            <label for="analytics-month">Месяц:</label>
+            <select class="period-select" name="month" id="analytics-month" aria-label="Месяц">
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if i==selected_month %}selected{% endif %}>
+                    {{ month_names[i - 1] }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="analytics-grid summary-grid">
+        <section class="analytics-card total-analysis-card">
+            <span class="card-label">Ваши расходы за месяц</span>
+            <strong class="primary-amount">{{ user_total | rub }} ₽</strong>
+            <span class="comparison-text {% if total_delta > 0 %}is-high{% elif total_delta < 0 %}is-low{% endif %}">
+                {% if total_delta > 0 %}
+                На {{ total_delta | rub }} ₽ выше среднего по группе
+                {% elif total_delta < 0 %} На {{ (0 - total_delta) | rub }} ₽ ниже среднего по группе {% else %} На
+                    уровне среднего по группе {% endif %} </span>
+        </section>
+
+        <section class="analytics-card">
+            <span class="card-label">Средняя трата в группе</span>
+            <strong class="secondary-amount">{{ group_avg_total | rub }} ₽</strong>
+            <p class="card-note">Группа строится по возрасту, доходу и региону пользователя.</p>
+        </section>
+
+        <section class="analytics-card percentile-card">
+            <div class="percentile-heading">
+                <span class="card-label">Ваш персентиль</span>
+                <strong>{{ total_percentile }}%</strong>
+            </div>
+            <div class="percentile-track" aria-label="Персентиль пользователя">
+                <div class="percentile-fill {% if total_percentile >= 75 %}is-high{% elif total_percentile <= 25 %}is-low{% endif %}"
+                    style="width: {{ total_percentile_width }}%"></div>
+            </div>
+            <p class="card-note">Ваши расходы выше или равны расходам {{ total_percentile }}% похожих пользователей.</p>
+        </section>
+    </div>
+
+    <section class="analytics-card advice-card">
+        <div class="section-heading">
+            <h2>Совет по оптимизации</h2>
+            <span class="section-kicker">На основе персентилей</span>
+        </div>
+
+        {% if tips %}
+        <div class="advice-list">
+            {% for tip in tips %}
+            <div class="advice-item advice-{{ tip.type }}">
+                {{ tip.text }}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="advice-item advice-success">
+            Ваши траты выглядят сбалансированно относительно похожей группы. Продолжайте отслеживать категории,
+            которые быстрее всего растут от месяца к месяцу.
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="analytics-card categories-analysis-card">
+        <div class="section-heading">
+            <div>
+                <h2>Анализ по категориям</h2>
+                <p>Расходы, среднее по группе и персентиль по каждой категории за месяц.</p>
+            </div>
+            <span class="category-count">{{ categories_data | length }} категорий</span>
+        </div>
+
+        {% if categories_data %}
+        <div class="category-table">
+            <div class="category-row category-row-head">
+                <span>Категория</span>
+                <span>Ваши траты</span>
+                <span>Среднее группы</span>
+                <span>Персентиль</span>
+            </div>
+
+            {% for cat in categories_data %}
+            {% set cat_delta = cat.user_total - cat.group_avg %}
+            {% set cat_percentile_width = [cat.percentile, 100] | min %}
+            <div
+                class="category-row {% if cat.percentile >= 75 %}is-attention{% elif cat.percentile <= 25 %}is-good{% endif %}">
+                <div class="category-main">
+                    <span class="category-name">{{ cat.name }}</span>
+                    <span class="category-delta {% if cat_delta > 0 %}is-high{% elif cat_delta < 0 %}is-low{% endif %}">
+                        {% if cat_delta > 0 %}
+                        +{{ cat_delta | rub }} ₽ к среднему
+                        {% elif cat_delta < 0 %} -{{ (0 - cat_delta) | rub }} ₽ от среднего {% else %} На уровне группы
+                            {% endif %} </span>
+                </div>
+                <strong class="money-value">{{ cat.user_total | rub }} ₽</strong>
+                <span class="money-value muted">{{ cat.group_avg | rub }} ₽</span>
+                <div class="category-percentile">
+                    <div class="mini-track">
+                        <div class="mini-fill {% if cat.percentile >= 75 %}is-high{% elif cat.percentile <= 25 %}is-low{% endif %}"
+                            style="width: {{ cat_percentile_width }}%"></div>
+                    </div>
+                    <strong>{{ cat.percentile }}%</strong>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <h3>Нет данных за выбранный месяц</h3>
+            <p>Добавьте расходы или выберите другой месяц, чтобы увидеть сравнение с группой.</p>
+            <a href="{{ url_for('add_transactions') }}" class="btn-add">Добавить траты</a>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+    document.getElementById('analytics-month').addEventListener('change', () => {
+        document.getElementById('analytics-period-form').submit();
+    });
+</script>
+{% endblock %}

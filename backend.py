@@ -1,16 +1,20 @@
-import os
+﻿import os
 from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, send_from_directory, session, url_for
 from flask_mail import Mail, Message
 from itsdangerous import BadTimeSignature, SignatureExpired, URLSafeTimedSerializer
 from datetime import datetime
+from sqlalchemy import extract, func, select
 
 from scripts.db_functions import (
     add_transaction,
     add_user,
+    count_percentile,
+    count_percentile_by_category,
     get_all_categories,
     get_monthly_spending_summary,
     get_user_by_email,
+    get_user_group,
     import_transactions_csv,
     is_confirmed,
     is_existing,
@@ -19,7 +23,7 @@ from scripts.db_functions import (
     sync_category_catalog,
     update_user_info,
 )
-from scripts.init_db import Base, engine
+from scripts.init_db import Base, engine, SessionLocal, Transaction
 
 MONTH_NAMES = [
     "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
@@ -141,7 +145,8 @@ def format_rub(value):
         num = float(value)
     except (TypeError, ValueError):
         return value
-    formatted = f"{num:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ")
+    formatted = f"{num:,.2f}".replace(
+        ",", "X").replace(".", ",").replace("X", " ")
     return formatted
 
 
@@ -260,7 +265,8 @@ def add_transactions():
         mode = request.form.get('mode', '')
 
         if mode == 'manual':
-            amount_raw = request.form.get('amount', '').strip().replace(',', '.')
+            amount_raw = request.form.get(
+                'amount', '').strip().replace(',', '.')
             category = request.form.get('category', '').strip()
             custom_category = request.form.get('custom_category', '').strip()
             date_raw = request.form.get('transaction_date', '').strip()
@@ -283,7 +289,8 @@ def add_transactions():
                 return redirect(url_for('add_transactions'))
 
             try:
-                transaction_date = datetime.strptime(date_raw, '%Y-%m-%d').date()
+                transaction_date = datetime.strptime(
+                    date_raw, '%Y-%m-%d').date()
             except ValueError:
                 flash('Укажите корректную дату.')
                 return redirect(url_for('add_transactions'))
@@ -461,6 +468,138 @@ def logout():
     """
     session.pop("email", None)
     return redirect("/")
+
+
+@app.route('/analytics')
+def analytics():
+    email = session.get("email")
+    if not email:
+        return redirect(url_for('sign_in'))
+
+    user = get_user_by_email(email)
+    if not user:
+        session.pop("email", None)
+        return redirect(url_for('sign_in'))
+
+    user_id = user.user_id
+    selected_month = request.args.get(
+        'month', type=int, default=datetime.now().month)
+    if not selected_month or selected_month < 1 or selected_month > 12:
+        selected_month = datetime.now().month
+
+    db_session = SessionLocal()
+    try:
+        user_total = db_session.execute(
+            select(func.sum(Transaction.amount)).where(
+                Transaction.user_id == user_id,
+                extract("month", Transaction.transaction_date) == selected_month,
+            )
+        ).scalar_one_or_none() or 0.0
+
+        total_percentile = count_percentile(user_id, selected_month)
+        group_users = get_user_group(user_id)
+
+        group_avg_total = 0.0
+        if group_users:
+            group_total_sum = db_session.execute(
+                select(func.sum(Transaction.amount)).where(
+                    Transaction.user_id.in_(group_users),
+                    extract(
+                        "month", Transaction.transaction_date) == selected_month,
+                )
+            ).scalar_one_or_none() or 0.0
+            group_avg_total = group_total_sum / len(group_users)
+
+        user_categories_query = db_session.execute(
+            select(
+                Transaction.category,
+                func.sum(Transaction.amount).label('cat_total'),
+            )
+            .where(
+                Transaction.user_id == user_id,
+                extract("month", Transaction.transaction_date) == selected_month,
+            )
+            .group_by(Transaction.category)
+        ).all()
+
+        categories_data = []
+        for cat_row in user_categories_query:
+            cat_name = cat_row.category
+            cat_user_total = cat_row.cat_total or 0.0
+
+            cat_group_avg = 0.0
+            if group_users:
+                cat_group_sum = db_session.execute(
+                    select(func.sum(Transaction.amount)).where(
+                        Transaction.user_id.in_(group_users),
+                        extract(
+                            "month", Transaction.transaction_date) == selected_month,
+                        Transaction.category == cat_name,
+                    )
+                ).scalar_one_or_none() or 0.0
+                cat_group_avg = cat_group_sum / len(group_users)
+
+            categories_data.append({
+                'name': cat_name,
+                'user_total': float(cat_user_total),
+                'group_avg': float(cat_group_avg),
+                'percentile': float(count_percentile_by_category(
+                    user_id, selected_month, cat_name)),
+            })
+    finally:
+        db_session.close()
+
+    categories_data.sort(key=lambda x: x['user_total'], reverse=True)
+
+    tips = []
+    if not group_users:
+        tips.append({
+            "type": "warning",
+            "text": "Для сравнения с похожей группой заполните в профиле возраст, доход и регион. Пока показаны только ваши расходы за месяц.",
+        })
+    elif total_percentile > 75:
+        tips.append({
+            "type": "danger",
+            "text": "Общие расходы заметно выше уровня похожей группы. Начните с двух самых крупных категорий и задайте для них месячный лимит.",
+        })
+    elif total_percentile < 25 and float(user_total) > 0:
+        tips.append({
+            "type": "success",
+            "text": "Общие расходы ниже большинства похожих пользователей. Это хороший уровень контроля, его стоит поддерживать.",
+        })
+
+    if group_users:
+        for cat in categories_data:
+            if cat['percentile'] >= 80:
+                diff = max(cat['user_total'] - cat['group_avg'], 0)
+                tips.append({
+                    "type": "warning",
+                    "text": (
+                        f"Категория «{cat['name']}» находится в высоком персентиле: "
+                        f"выше или равна расходам {cat['percentile']}% группы. "
+                        f"Потенциал экономии относительно среднего: {diff:,.2f} ₽."
+                    ),
+                })
+            elif cat['percentile'] <= 20:
+                tips.append({
+                    "type": "success",
+                    "text": (
+                        f"В категории «{cat['name']}» расходы ниже большинства группы. "
+                        "Это удачная зона контроля, ее можно не трогать в первую очередь."
+                    ),
+                })
+
+    return render_template(
+        'analytics.html',
+        user=user,
+        user_total=float(user_total),
+        total_percentile=float(total_percentile),
+        group_avg_total=float(group_avg_total),
+        categories_data=categories_data,
+        tips=tips,
+        selected_month=selected_month,
+        month_names=MONTH_NAMES,
+    )
 
 
 if __name__ == "__main__":

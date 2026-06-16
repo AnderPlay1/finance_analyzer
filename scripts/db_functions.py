@@ -141,12 +141,15 @@ def count_percentile_by_category(user_id, month, category):
         session.close()
 
 
-def define_age_group(age) -> int:
+def define_age_group(age) -> int | None:
     """
     Определяет возрастную группу по возрасту.
     :param age: int
     :return: int
     """
+    if age is None:
+        return None
+
     if age <= 26:
         return 0
     if age <= 45:
@@ -167,6 +170,8 @@ def get_user_group(user_id):
         user = session.execute(select(User).where(User.user_id == user_id)).scalar_one()
 
         age_group = define_age_group(user.age)
+        if age_group is None or user.income is None or not user.region:
+            return []
 
         age_group_expr = case(
             (User.age <= 26, 0),
