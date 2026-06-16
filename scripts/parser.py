@@ -2,7 +2,8 @@
 import pandas as pd
 from sqlalchemy.engine import Engine
 
-from scripts.init_db import engine
+from init_db import engine
+from db_functions import sync_category_catalog
 
 
 def get_engine() -> Engine:
@@ -146,6 +147,7 @@ def parse_transactions() -> None:
         if_exists="append",
         index=False,
     )
+    sync_category_catalog()
 
 
 def parse_all() -> None:

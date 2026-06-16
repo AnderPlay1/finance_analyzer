@@ -1,0 +1,248 @@
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.home-title {
+    font-size: 2.4em;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.home-subtitle {
+    color: #7f8c8d;
+    margin: 8px 0 0;
+    font-size: 1.05em;
+}
+
+.period-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.period-controls label {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.period-select {
+    padding: 10px 14px;
+    border: 1px solid #dce3e8;
+    border-radius: 10px;
+    background: #fff;
+    color: #2c3e50;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.period-select:focus {
+    outline: none;
+    border-color: #0097a8;
+    box-shadow: 0 0 0 3px rgba(0, 151, 168, 0.15);
+}
+
+.home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.home-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+}
+
+.total-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: linear-gradient(135deg, #2c4a4d 0%, #0097a8 100%);
+    color: #fff;
+    min-height: 200px;
+}
+
+.total-label {
+    font-size: 1em;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.total-amount {
+    font-size: 2.8em;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.total-period {
+    margin-top: 12px;
+    font-size: 0.95em;
+    opacity: 0.85;
+}
+
+.actions-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+}
+
+.actions-card h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.2em;
+}
+
+.actions-card p {
+    margin: 0;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+.btn-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: #0097a8;
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.05em;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.2s ease;
+}
+
+.btn-add:hover {
+    background: #007d8a;
+    color: #fff;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.chart-card h3,
+.categories-card h3 {
+    margin: 0 0 20px;
+    color: #2c3e50;
+    font-size: 1.25em;
+    border-bottom: 2px solid #f0f3f5;
+    padding-bottom: 12px;
+}
+
+.chart-wrapper {
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #7f8c8d;
+}
+
+.empty-state-icon {
+    font-size: 3em;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f3f5;
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+.category-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.category-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.category-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.category-bar-track {
+    height: 6px;
+    background: #f0f3f5;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.category-amounts {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.category-rub {
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 1.05em;
+}
+
+.category-pct {
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+@media (max-width: 900px) {
+    .home-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .total-amount {
+        font-size: 2.2em;
+    }
+}

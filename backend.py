@@ -3,15 +3,28 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, send_from_directory, session, url_for
 from flask_mail import Mail, Message
 from itsdangerous import BadTimeSignature, SignatureExpired, URLSafeTimedSerializer
+from datetime import datetime
+
 from scripts.db_functions import (
+    add_transaction,
     add_user,
+    get_all_categories,
+    get_monthly_spending_summary,
     get_user_by_email,
+    import_transactions_csv,
     is_confirmed,
     is_existing,
     is_password_correct,
     set_confirmed,
+    sync_category_catalog,
     update_user_info,
 )
+from scripts.init_db import Base, engine
+
+MONTH_NAMES = [
+    "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+    "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+]
 
 REGION_MAP_FILE = 'data/regions_mapping.txt'
 
@@ -114,8 +127,22 @@ app.config['MAIL_DEFAULT_SENDER'] = os.getenv(
 
 mail = Mail(app)
 
+Base.metadata.create_all(engine)
+sync_category_catalog()
+
 # Инициализация сериализатора для токенов
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+
+@app.template_filter('rub')
+def format_rub(value):
+    """Форматирует число в строку с разделителями тысяч и запятой как десятичным знаком."""
+    try:
+        num = float(value)
+    except (TypeError, ValueError):
+        return value
+    formatted = f"{num:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ")
+    return formatted
 
 
 @app.before_request
@@ -184,11 +211,116 @@ def index():
     Главная страница сайта.
     :return: Рендеринг шаблона main.html
     """
-    chart_data = {
-        "labels": ["Python", "JavaScript", "C++", "Java"],
-        "values": [40, 30, 15, 15]
-    }
-    return render_template('main.html', chart_data=chart_data, user="email" in session)
+    if "email" not in session:
+        return redirect(url_for('sign_in'))
+
+    user = get_user_by_email(session.get("email"))
+    if not user:
+        session.pop("email", None)
+        return redirect(url_for('sign_in'))
+
+    now = datetime.now()
+    month = request.args.get('month', type=int, default=now.month)
+    year = request.args.get('year', type=int, default=now.year)
+
+    if not month or month < 1 or month > 12:
+        month = now.month
+    if not year or year < 2000 or year > 2100:
+        year = now.year
+
+    summary = get_monthly_spending_summary(user.user_id, month, year)
+    year_options = list(range(now.year - 2, now.year + 1))
+
+    return render_template(
+        'main.html',
+        user=True,
+        summary=summary,
+        selected_month=month,
+        selected_year=year,
+        month_names=MONTH_NAMES,
+        year_options=year_options,
+    )
+
+
+@app.route('/add', methods=['GET', 'POST'])
+@auth
+def add_transactions():
+    """
+    Страница добавления трат (ручной ввод и загрузка CSV).
+    :return: Рендеринг шаблона add.html
+    """
+    user = get_user_by_email(session.get("email"))
+    if not user:
+        session.pop("email", None)
+        return redirect(url_for('sign_in'))
+
+    categories = get_all_categories()
+
+    if request.method == 'POST':
+        mode = request.form.get('mode', '')
+
+        if mode == 'manual':
+            amount_raw = request.form.get('amount', '').strip().replace(',', '.')
+            category = request.form.get('category', '').strip()
+            custom_category = request.form.get('custom_category', '').strip()
+            date_raw = request.form.get('transaction_date', '').strip()
+
+            if custom_category:
+                category = custom_category
+
+            try:
+                amount = float(amount_raw)
+            except ValueError:
+                flash('Укажите корректную сумму.')
+                return redirect(url_for('add_transactions'))
+
+            if amount <= 0:
+                flash('Сумма должна быть больше нуля.')
+                return redirect(url_for('add_transactions'))
+
+            if not category:
+                flash('Выберите категорию или введите свою.')
+                return redirect(url_for('add_transactions'))
+
+            try:
+                transaction_date = datetime.strptime(date_raw, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Укажите корректную дату.')
+                return redirect(url_for('add_transactions'))
+
+            if add_transaction(user.user_id, amount, category, transaction_date):
+                flash(f'Трата «{category}» на сумму {amount:.2f} ₽ добавлена.')
+                return redirect(url_for('index'))
+            flash('Не удалось сохранить трату. Попробуйте ещё раз.')
+            return redirect(url_for('add_transactions'))
+
+        if mode == 'csv':
+            uploaded = request.files.get('csv_file')
+            if not uploaded or not uploaded.filename:
+                flash('Выберите CSV-файл для загрузки.')
+                return redirect(url_for('add_transactions'))
+
+            if not uploaded.filename.lower().endswith('.csv'):
+                flash('Файл должен иметь расширение .csv')
+                return redirect(url_for('add_transactions'))
+
+            result = import_transactions_csv(user.user_id, uploaded.read())
+            added = result.get('added', 0)
+            errors = result.get('errors', [])
+
+            if added > 0:
+                flash(f'Импортировано транзакций: {added}.')
+                if errors:
+                    flash(f'Пропущено строк с ошибками: {len(errors)}.')
+                return redirect(url_for('index'))
+
+            if errors:
+                flash(errors[0])
+            else:
+                flash('Не удалось импортировать транзакции.')
+            return redirect(url_for('add_transactions'))
+
+    return render_template('add.html', user=True, categories=categories)
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])

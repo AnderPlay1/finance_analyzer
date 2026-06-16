@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/add.css') }}">
+
+<div class="add-container">
+    <div class="add-header">
+        <h1 class="add-title">Добавление трат</h1>
+        <a href="{{ url_for('index') }}" class="back-link">← На главную</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="add-flash">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="add-tabs" role="tablist">
+        <button type="button" class="add-tab active" data-tab="manual" role="tab" aria-selected="true">
+            Вручную
+        </button>
+        <button type="button" class="add-tab" data-tab="csv" role="tab" aria-selected="false">
+            Загрузить CSV
+        </button>
+    </div>
+
+    <div class="add-panel active" id="panel-manual" role="tabpanel">
+        <div class="add-card">
+            <h2>Новая трата</h2>
+            <p class="card-hint">Укажите сумму, категорию и дату покупки.</p>
+
+            <form method="post" action="{{ url_for('add_transactions') }}">
+                <input type="hidden" name="mode" value="manual">
+
+                <div class="add-form-group">
+                    <label for="amount">Сумма (₽)</label>
+                    <input class="add-input" type="number" id="amount" name="amount" min="0.01" step="0.01" required
+                        placeholder="1500.00">
+                </div>
+
+                <div class="add-form-group">
+                    <label for="category">Категория</label>
+                    {% if categories %}
+                    <select class="add-select" id="category" name="category">
+                        <option value="">— Выберите категорию —</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <p class="card-hint" style="margin-bottom: 12px;">
+                        В базе ещё нет категорий — введите название новой категории.
+                    </p>
+                    <input type="hidden" id="category" name="category" value="">
+                    <div class="custom-category-input visible">
+                        <input class="add-input" type="text" id="custom_category" name="custom_category" maxlength="50"
+                            placeholder="Название категории" required>
+                    </div>
+                    {% endif %}
+
+                    {% if categories %}
+                    <div class="custom-category-block">
+                        <label class="custom-category-toggle">
+                            <input type="checkbox" id="use-custom-category">
+                            Своя категория
+                        </label>
+                        <div class="custom-category-input" id="custom-category-wrap">
+                            <input class="add-input" type="text" id="custom_category" name="custom_category"
+                                maxlength="50" placeholder="Название новой категории">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="add-form-group">
+                    <label for="transaction_date">Дата покупки</label>
+                    <input class="add-input" type="date" id="transaction_date" name="transaction_date" required>
+                </div>
+
+                <button type="submit" class="add-submit">Добавить трату</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="add-panel" id="panel-csv" role="tabpanel">
+        <div class="add-card">
+            <h2>Импорт из CSV</h2>
+            <p class="card-hint">Загрузите файл с транзакциями — данные будут добавлены к вашему аккаунту.</p>
+
+            <div class="csv-format">
+                <p>Три колонки в каждой строке:</p>
+                <ul>
+                    <li><strong>date</strong> — дата в формате <code>YYYY-MM-DD</code> или <code>DD.MM.YYYY</code></li>
+                    <li><strong>category</strong> — название категории</li>
+                    <li><strong>amount</strong> — сумма в рублях (число)</li>
+                </ul>
+                <p>Разделитель — точка с запятой (<code>;</code>). Кодировка UTF-8 или Windows-1251 (CP1251).</p>
+                <pre class="csv-example">date;category;amount
+2024-03-15;Рестораны;2500.50
+2024-03-16;Транспорт;350
+2024-03-17;Маркетплейсы;1899</pre>
+
+                <p>Строки с нулевой суммой или категорией «0» будут пропущены.</p>
+            </div>
+
+            <form method="post" action="{{ url_for('add_transactions') }}" enctype="multipart/form-data">
+                <input type="hidden" name="mode" value="csv">
+
+                <div class="add-form-group file-upload">
+                    <label for="csv_file">CSV-файл</label>
+                    <input type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+
+                <button type="submit" class="add-submit">Загрузить и импортировать</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const tabs = document.querySelectorAll('.add-tab');
+    const panels = document.querySelectorAll('.add-panel');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            tabs.forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === target);
+                t.setAttribute('aria-selected', t.dataset.tab === target);
+            });
+            panels.forEach(panel => {
+                panel.classList.toggle('active', panel.id === `panel-${target}`);
+            });
+        });
+    });
+
+    const hasCategories = {{ 'true' if categories else 'false' }};
+
+    if (hasCategories) {
+        const useCustomCheckbox = document.getElementById('use-custom-category');
+        const categorySelect = document.getElementById('category');
+        const customWrap = document.getElementById('custom-category-wrap');
+        const customInput = document.getElementById('custom_category');
+
+        useCustomCheckbox.addEventListener('change', () => {
+            const enabled = useCustomCheckbox.checked;
+            customWrap.classList.toggle('visible', enabled);
+            categorySelect.disabled = enabled;
+            if (enabled) {
+                categorySelect.value = '';
+                customInput.focus();
+            } else {
+                customInput.value = '';
+            }
+        });
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('transaction_date').value = today;
+</script>
+{% endblock %}

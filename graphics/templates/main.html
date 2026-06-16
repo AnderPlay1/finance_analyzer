@@ -1,44 +1,171 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="chart-container">
-    <canvas id="myPieChart"></canvas>
+<div class="home-container">
+    <div class="home-header">
+        <div>
+            <h1 class="home-title">Мои расходы</h1>
+            <p class="home-subtitle">Обзор трат по категориям за выбранный период</p>
+        </div>
+        <form class="period-controls" method="get" action="{{ url_for('index') }}" id="period-form">
+            <label for="month-select">Период:</label>
+            <select class="period-select" name="month" id="month-select" aria-label="Месяц">
+                {% for i in range(1, 13) %}
+                <option value="{{ i }}" {% if i == selected_month %}selected{% endif %}>
+                    {{ month_names[i - 1] }}
+                </option>
+                {% endfor %}
+            </select>
+            <select class="period-select" name="year" id="year-select" aria-label="Год">
+                {% for y in year_options %}
+                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="home-grid">
+        <div class="home-card total-card">
+            <span class="total-label">Суммарные расходы</span>
+            <span class="total-amount">{{ summary.total | rub }} ₽</span>
+            <span class="total-period">{{ month_names[selected_month - 1] }} {{ selected_year }}</span>
+        </div>
+
+        <div class="home-card actions-card">
+            <h3>Добавить данные</h3>
+            <p>Внесите покупку вручную или загрузите выписку в формате CSV для автоматического импорта.</p>
+            <a href="{{ url_for('add_transactions') }}" class="btn-add">
+                <span>+</span> Добавить траты
+            </a>
+        </div>
+    </div>
+
+    <div class="home-grid">
+        <div class="home-card chart-card">
+            <h3>Структура расходов</h3>
+            {% if summary.categories %}
+            <div class="chart-wrapper">
+                <canvas id="spendingPieChart" aria-label="Диаграмма расходов по категориям"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>Нет данных за этот период.<br>Добавьте траты, чтобы увидеть диаграмму.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="home-card categories-card">
+            <h3>Расходы по категориям</h3>
+            {% if summary.categories %}
+            <ul class="category-list" id="category-list">
+                {% for cat in summary.categories %}
+                <li class="category-item">
+                    <span class="category-color" data-index="{{ loop.index0 }}"></span>
+                    <div class="category-info">
+                        <div class="category-name">{{ cat.name }}</div>
+                        <div class="category-bar-track">
+                            <div class="category-bar-fill" style="width: {{ cat.share }}%"></div>
+                        </div>
+                    </div>
+                    <div class="category-amounts">
+                        <div class="category-rub">{{ cat.amount | rub }} ₽</div>
+                        <div class="category-pct">{{ cat.share }}%</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">💳</div>
+                <p>Категории появятся после добавления транзакций.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
+{% if summary.categories %}
 <script>
-    const labels = {{ chart_data['labels']| tojson }};
-    const values = {{ chart_data['values']| tojson }};
+    const CHART_COLORS = [
+        '#0097a8', '#ff6f61', '#4bc0c0', '#ffce56', '#9966ff',
+        '#ff9f40', '#36a2eb', '#c9cbcf', '#2ecc71', '#e74c3c',
+        '#9b59b6', '#f39c12', '#1abc9c', '#34495e', '#e67e22',
+        '#16a085', '#8e44ad', '#d35400', '#27ae60', '#2980b9',
+    ];
 
+    const categories = {{ summary.categories | tojson }};
+    const labels = categories.map(c => c.name);
+    const shares = categories.map(c => c.share);
+    const amounts = categories.map(c => c.amount);
+    const colors = labels.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]);
 
-    const ctx = document.getElementById('myPieChart');
+    document.querySelectorAll('.category-color').forEach(el => {
+        const idx = parseInt(el.dataset.index, 10);
+        el.style.background = colors[idx];
+    });
+    document.querySelectorAll('.category-bar-fill').forEach((el, i) => {
+        el.style.background = colors[i];
+    });
 
+    const ctx = document.getElementById('spendingPieChart');
     new Chart(ctx, {
         type: 'pie',
-
         data: {
             labels: labels,
-
             datasets: [{
-                label: 'Количество',
-
-                data: values,
-
-                backgroundColor: [
-                    '#36A2EB',
-                    '#FF6384',
-                    '#FFCE56',
-                    '#4BC0C0'
-                ],
-
-                borderWidth: 1
-            }]
+                data: shares,
+                backgroundColor: colors,
+                borderColor: '#fff',
+                borderWidth: 2,
+            }],
         },
-
         options: {
-            responsive: true
-        }
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 14,
+                        padding: 12,
+                        font: { size: 12 },
+                    },
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const share = context.parsed;
+                            const amount = amounts[context.dataIndex];
+                            const formatted = amount.toLocaleString('ru-RU', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                            return `${context.label}: ${share}% (${formatted} ₽)`;
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    document.getElementById('month-select').addEventListener('change', () => {
+        document.getElementById('period-form').submit();
+    });
+    document.getElementById('year-select').addEventListener('change', () => {
+        document.getElementById('period-form').submit();
     });
 </script>
+{% else %}
+<script>
+    document.getElementById('month-select').addEventListener('change', () => {
+        document.getElementById('period-form').submit();
+    });
+    document.getElementById('year-select').addEventListener('change', () => {
+        document.getElementById('period-form').submit();
+    });
+</script>
+{% endif %}
 {% endblock %}

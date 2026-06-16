@@ -1,13 +1,12 @@
-
 .sidebar-footer {
     padding: 1.5rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    margin-top: auto; /* Прижимаем к низу */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
 }
 
 .btn-back {
     width: 100%;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-light);
     border: none;
     padding: 12px 20px;
@@ -25,7 +24,7 @@
 .btn-back:hover {
     background: var(--primary-color);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255,111,97,0.35);
+    box-shadow: 0 4px 15px rgba(255, 111, 97, 0.35);
 }
 
 .btn-back:active {
@@ -33,11 +32,9 @@
     box-shadow: none;
 }
 
-/* Для соответствия другим кнопкам */
 .btn-back {
     font-family: inherit;
     letter-spacing: 0.5px;
     line-height: 1.5;
     text-align: left;
 }
-
