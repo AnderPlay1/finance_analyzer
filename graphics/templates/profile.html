@@ -67,8 +67,8 @@
                 </div>
 
                 <div class="info-item">
-                    <span class="info-label">Ваш ID:</span>
-                    <p class="info-value">{{ user.user_id or user.id }}</p>
+                    <span class="info-label">Возраст:</span>
+                    <input class="info-value" type="number" name="age" value="{{ user.age or '' }}" required readonly />
                 </div>
 
                 <button class="edit-btn" type="submit" id="save-btn" style="display: none;">Сохранить изменения</button>

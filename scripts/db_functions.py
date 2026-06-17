@@ -68,8 +68,8 @@ def count_percentile(user_id, month) -> float:
             Transaction.user_id,
             func.sum(Transaction.amount).label('total')
         ).where(
-                Transaction.user_id.in_(group),
-                extract("month", Transaction.transaction_date) == month
+            Transaction.user_id.in_(group),
+            extract("month", Transaction.transaction_date) == month
         ).group_by(Transaction.user_id)
 
         spendings_map = {
@@ -121,9 +121,9 @@ def count_percentile_by_category(user_id, month, category):
             Transaction.user_id,
             func.sum(Transaction.amount).label('total')
         ).where(
-                Transaction.user_id.in_(group),
-                extract("month", Transaction.transaction_date) == month,
-                Transaction.category == category
+            Transaction.user_id.in_(group),
+            extract("month", Transaction.transaction_date) == month,
+            Transaction.category == category
         ).group_by(Transaction.user_id)
 
         spendings_map = {
@@ -159,15 +159,15 @@ def define_age_group(age) -> int | None:
     return 3
 
 
-
 def get_user_group(user_id):
     '''
     user_id пользоавтелей в том же регионе, возрастной группе 
     и в диапазоне ±10% от зарплаты
-    '''   
+    '''
     session = next(get_db())
     try:
-        user = session.execute(select(User).where(User.user_id == user_id)).scalar_one()
+        user = session.execute(select(User).where(
+            User.user_id == user_id)).scalar_one()
 
         age_group = define_age_group(user.age)
         if age_group is None or user.income is None or not user.region:
@@ -179,13 +179,13 @@ def get_user_group(user_id):
             (User.age <= 60, 2),
             else_=3
         ).label('age_group')
-   
+
         return session.execute(select(User.user_id).where(and_(
             age_group_expr == age_group,
             User.income.between(
-            user.income * Decimal("0.9"),   # type: ignore[operator]
-            user.income * Decimal("1.1")),  # type: ignore[operator]
-        User.region == user.region))
+                user.income * Decimal("0.9"),   # type: ignore[operator]
+                user.income * Decimal("1.1")),  # type: ignore[operator]
+            User.region == user.region))
         ).scalars().all()
     finally:
         session.close()
@@ -240,8 +240,9 @@ def update_user_info(old_email: str, values: dict) -> bool:
         user.last_name = values.get('last_name', '').strip()
         user.middle_name = values.get('middle_name', '').strip()
         user.region = values.get('region', '').strip()
-
+        user.age = values.get('age', '').strip()
         income_value = values.get('income', '').strip()
+
         if income_value:
             try:
                 user.income = float(income_value)
@@ -356,7 +357,8 @@ def big_spending(user_id, month) -> list:
         percentile = count_percentile_by_category(user_id, month, cat)
 
         if percentile > 50:
-            reduction = float(category_spendings(user_id, month, cat)) * float(percentile-50) / 100
+            reduction = float(category_spendings(
+                user_id, month, cat)) * float(percentile-50) / 100
             if reduction > 0:
                 overspending.append({
                     "category": cat,
@@ -376,12 +378,13 @@ def category_spendings(user_id, month, category) -> float:
     session = next(get_db())
     try:
         return session.scalar(
-                select(func.sum(Transaction.amount)).
-                where(Transaction.user_id == user_id,
-                      extract("month", Transaction.transaction_date) == month,
-                      Transaction.category == category)) or 0
+            select(func.sum(Transaction.amount)).
+            where(Transaction.user_id == user_id,
+                  extract("month", Transaction.transaction_date) == month,
+                  Transaction.category == category)) or 0
     finally:
         session.close()
+
 
 def get_monthly_spending_summary(user_id: int, month: int, year: int) -> dict:
     """
@@ -396,7 +399,8 @@ def get_monthly_spending_summary(user_id: int, month: int, year: int) -> dict:
         result = session.execute(
             select(
                 Transaction.category,
-                func.coalesce(func.sum(Transaction.amount), 0).label("cat_sum"),
+                func.coalesce(func.sum(Transaction.amount),
+                              0).label("cat_sum"),
             )
             .where(
                 Transaction.user_id == user_id,

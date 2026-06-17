@@ -361,6 +361,7 @@ def dashboard():
             'email': form_email,
             'region': normalize_region(request.form.get('region', '')),
             'income': request.form.get('income', ''),
+            'age': request.form.get('age', ''),
         })
 
         if not updated:
@@ -471,6 +472,7 @@ def logout():
 
 
 @app.route('/analytics')
+@auth
 def analytics():
     email = session.get("email")
     if not email:
