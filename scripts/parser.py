@@ -1,9 +1,19 @@
 # -*- coding: utf-8 -*-
+import sys
+from pathlib import Path
+
 import pandas as pd
 from sqlalchemy.engine import Engine
 
-from init_db import engine
-from db_functions import sync_category_catalog
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from scripts.init_db import engine
+from scripts.db_functions import sync_category_catalog
+
+TRANSACTION_CHUNK_SIZE = 100_000
+SQL_INSERT_CHUNK_SIZE = 10_000
 
 
 def get_engine() -> Engine:
@@ -30,15 +40,14 @@ def trim_quantile(df, col, q) -> pd.DataFrame:
     return df[(df[col] >= low) & (df[col] <= high)]
 
 
-def parse_cities() -> None:
-    '''
-    Читает данные из users_data.csv, форматирует и добавляет в базу данных.
-    Пользователи из CSV не содержат пароль, поэтому поле password_hash остаётся пустым.
-    '''
-    engine = get_engine()
-    users = pd.read_csv("data/users_data.csv", encoding="cp1251", sep=';')
-    users["monthly_income_amt"] = (
-        users["monthly_income_amt"]
+def clean_amount_series(series: pd.Series) -> pd.Series:
+    """
+    Приводит строковую колонку суммы к числовому формату.
+    :param series: pd.Series
+    :return: pd.Series
+    """
+    cleaned = (
+        series
         .astype(str)
         .str.replace(" ", "", regex=False)
         .str.replace(",", ".", regex=False)
@@ -46,9 +55,17 @@ def parse_cities() -> None:
         .str.replace("None", "", regex=False)
         .str.replace("nan", "", regex=False)
     )
-    users["monthly_income_amt"] = pd.to_numeric(
-        users["monthly_income_amt"], errors="coerce"
-    )
+    return pd.to_numeric(cleaned, errors="coerce")
+
+
+def parse_cities() -> None:
+    '''
+    Читает данные из users_data.csv, форматирует и добавляет в базу данных.
+    Пользователи из CSV не содержат пароль, поэтому поле password_hash остаётся пустым.
+    '''
+    engine = get_engine()
+    users = pd.read_csv("data/users_data.csv", encoding="cp1251", sep=';')
+    users["monthly_income_amt"] = clean_amount_series(users["monthly_income_amt"])
     users = users[users["monthly_income_amt"] >= 0]
     users = users[users["citizenship_country_nm"] == "РФ"]
     users = users[users["lvn_state_nm"] != "0"]
@@ -78,50 +95,70 @@ def parse_cities() -> None:
         },
         inplace=True,
     )
-    print(users)
-    users.to_sql("users", engine, if_exists="append", index=False)
+    users.to_sql(
+        "users",
+        engine,
+        if_exists="append",
+        index=False,
+        chunksize=SQL_INSERT_CHUNK_SIZE,
+        method="multi",
+    )
 
 
-def parse_transactions() -> None:
-    '''
-    Читает данные из all_user_transactions.csv, форматирует и добавляет в базу данных.
-    '''
-    engine = get_engine()
-
-    transactions = pd.read_csv(
+def get_transaction_amount_bounds() -> tuple[float, float]:
+    """
+    Считает границы квантильной очистки по суммам транзакций без загрузки
+    всего CSV в память.
+    :return: tuple[float, float]
+    """
+    amounts = []
+    for chunk in pd.read_csv(
         "data/all_user_transactions.csv",
         encoding="cp1251",
         sep=';',
         dtype=str,
+        usecols=["transaction_amt_rur"],
+        chunksize=TRANSACTION_CHUNK_SIZE,
+    ):
+        chunk_amounts = clean_amount_series(chunk["transaction_amt_rur"])
+        chunk_amounts = chunk_amounts.dropna()
+        chunk_amounts = chunk_amounts[chunk_amounts > 0]
+        if not chunk_amounts.empty:
+            amounts.append(chunk_amounts)
+
+    if not amounts:
+        return 0.0, 0.0
+
+    all_amounts = pd.concat(amounts, ignore_index=True)
+    return (
+        float(all_amounts.quantile(0.05)),
+        float(all_amounts.quantile(0.95)),
     )
-    transactions["transaction_amt_rur"] = (
+
+
+def prepare_transactions_chunk(
+    transactions: pd.DataFrame,
+    low_amount: float,
+    high_amount: float,
+) -> pd.DataFrame:
+    """
+    Очищает и форматирует один chunk транзакций.
+    :param transactions: pd.DataFrame
+    :param low_amount: float
+    :param high_amount: float
+    :return: pd.DataFrame
+    """
+    transactions["transaction_amt_rur"] = clean_amount_series(
         transactions["transaction_amt_rur"]
-        .astype(str)
-        .str.replace(" ", "", regex=False)
-        .str.replace(",", ".", regex=False)
-        .str.replace("—", "", regex=False)
-        .str.replace("None", "", regex=False)
-        .str.replace("nan", "", regex=False)
     )
-    transactions = transactions.drop(columns=[
-        "Unnamed: 0",
-        "account_rk",
-        "financial_account_type_cd",
-        "financial_account_subtype_cd",
-        "transaction_type_cd",
-        "brand_nm",
-        "loyalty_accrual_rub_amt",
-        "utilization_flg",
-    ])
-
-    transactions = transactions[transactions["loyalty_cashback_category_nm"] != "0"]
-    transactions["transaction_amt_rur"] = pd.to_numeric(
-        transactions["transaction_amt_rur"], errors="coerce"
-    )
-
+    transactions = transactions[
+        transactions["loyalty_cashback_category_nm"] != "0"
+    ]
     transactions = transactions.dropna(subset=["transaction_amt_rur"])
     transactions = transactions[transactions["transaction_amt_rur"] > 0]
-    transactions = trim_quantile(transactions, "transaction_amt_rur", 0.05)
+    transactions = transactions[
+        transactions["transaction_amt_rur"].between(low_amount, high_amount)
+    ]
 
     transactions["real_transaction_dttm"] = pd.to_datetime(
         transactions["real_transaction_dttm"],
@@ -138,15 +175,53 @@ def parse_transactions() -> None:
         },
         inplace=True,
     )
+    return transactions[["user_id", "amount", "category", "transaction_date"]]
 
-    print(transactions.dtypes)
-    print(transactions.head())
-    transactions.to_sql(
-        "transactions",
-        engine,
-        if_exists="append",
-        index=False,
-    )
+
+def parse_transactions() -> None:
+    '''
+    Читает данные из all_user_transactions.csv, форматирует и добавляет в базу данных.
+    '''
+    engine = get_engine()
+    low_amount, high_amount = get_transaction_amount_bounds()
+    if low_amount == 0.0 and high_amount == 0.0:
+        print("Нет транзакций для импорта.")
+        return
+
+    drop_columns = [
+        "Unnamed: 0",
+        "account_rk",
+        "financial_account_type_cd",
+        "financial_account_subtype_cd",
+        "transaction_type_cd",
+        "brand_nm",
+        "loyalty_accrual_rub_amt",
+        "utilization_flg",
+    ]
+
+    imported_rows = 0
+    for chunk in pd.read_csv(
+        "data/all_user_transactions.csv",
+        encoding="cp1251",
+        sep=';',
+        dtype=str,
+        chunksize=TRANSACTION_CHUNK_SIZE,
+    ):
+        chunk = chunk.drop(columns=drop_columns)
+        prepared = prepare_transactions_chunk(chunk, low_amount, high_amount)
+        if prepared.empty:
+            continue
+        prepared.to_sql(
+            "transactions",
+            engine,
+            if_exists="append",
+            index=False,
+            chunksize=SQL_INSERT_CHUNK_SIZE,
+            method="multi",
+        )
+        imported_rows += len(prepared)
+        print(f"Импортировано транзакций: {imported_rows}")
+
     sync_category_catalog()
 
 

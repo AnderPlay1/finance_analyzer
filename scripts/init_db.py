@@ -19,14 +19,26 @@ from werkzeug.security import check_password_hash, generate_password_hash
 load_dotenv(dotenv_path=find_dotenv(".env"), override=False)
 
 DATABASE_URL = getenv("DATABASE_URL") or getenv(
-    "SQLALCHEMY_DATABASE_URI") or "sqlite:///site.db"
+    "SQLALCHEMY_DATABASE_URI")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL или SQLALCHEMY_DATABASE_URI должны указывать на MySQL."
+    )
+
+if not DATABASE_URL.startswith("mysql"):
+    raise RuntimeError(
+        "Проект по ТЗ работает только с MySQL. "
+        "Укажите DATABASE_URL вида mysql+pymysql://user:password@host:3306/db"
+    )
 
 if DATABASE_URL.startswith("mysql+pymysql://"):
     try:
         import pymysql  # noqa: F401
     except ImportError:
-        print("WARNING: pymysql не установлен, используется sqlite:///site.db")
-        DATABASE_URL = "sqlite:///site.db"
+        raise RuntimeError(
+            "Для DATABASE_URL с mysql+pymysql:// установите пакет pymysql."
+        ) from None
 
 engine = create_engine(
     DATABASE_URL,

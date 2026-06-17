@@ -199,7 +199,8 @@ def _normalize_interface_settings(values: dict | None) -> dict:
     values = values or {}
     theme = values.get("theme", DEFAULT_INTERFACE_SETTINGS["theme"])
     font = values.get("font", DEFAULT_INTERFACE_SETTINGS["font"])
-    font_size = values.get("font_size", DEFAULT_INTERFACE_SETTINGS["font_size"])
+    font_size = values.get(
+        "font_size", DEFAULT_INTERFACE_SETTINGS["font_size"])
 
     return {
         "theme": theme if theme in THEME_PRESETS else DEFAULT_INTERFACE_SETTINGS["theme"],
@@ -284,8 +285,15 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 if not app.config['SECRET_KEY']:
     raise RuntimeError('SECRET_KEY environment variable is required')
 app.secret_key = app.config['SECRET_KEY']
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'SQLALCHEMY_DATABASE_URI', 'sqlite:///site.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    os.getenv('DATABASE_URL') or os.getenv('SQLALCHEMY_DATABASE_URI')
+)
+if not app.config['SQLALCHEMY_DATABASE_URI']:
+    raise RuntimeError(
+        'DATABASE_URL или SQLALCHEMY_DATABASE_URI должны указывать на MySQL.'
+    )
+if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
+    raise RuntimeError('Проект по ТЗ работает только с MySQL.')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '587'))
 app.config['MAIL_USE_TLS'] = os.getenv(
@@ -774,6 +782,10 @@ def logout():
 @app.route('/analytics')
 @auth
 def analytics():
+    '''
+    Страница аналитики расходов пользователя.
+    :return: Рендеринг шаблона analytics.html с данными аналитики
+    '''
     email = session.get("email")
     if not email:
         return redirect(url_for('sign_in'))
@@ -876,7 +888,8 @@ def saving_goal():
     goal_error = ''
     if raw_goal_amount:
         try:
-            goal_amount = float(raw_goal_amount.replace(' ', '').replace(',', '.'))
+            goal_amount = float(raw_goal_amount.replace(
+                ' ', '').replace(',', '.'))
             if goal_amount <= 0:
                 goal_error = 'Введите сумму цели больше нуля.'
                 goal_amount = 0.0
