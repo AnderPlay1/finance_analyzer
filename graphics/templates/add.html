@@ -25,6 +25,9 @@
         <button type="button" class="add-tab" data-tab="csv" role="tab" aria-selected="false">
             Загрузить CSV
         </button>
+        <button type="button" class="add-tab" data-tab="manage" role="tab" aria-selected="false">
+            Удаление
+        </button>
     </div>
 
     <div class="add-panel active" id="panel-manual" role="tabpanel">
@@ -118,24 +121,103 @@
             </form>
         </div>
     </div>
+
+    <div class="add-panel" id="panel-manage" role="tabpanel">
+        <div class="management-grid">
+        <section class="add-card management-card">
+            <h2>Мои последние траты</h2>
+            <p class="card-hint">Удалить можно только траты, добавленные в ваш аккаунт.</p>
+            {% if transactions %}
+            <div class="transactions-list">
+                {% for tx in transactions %}
+                <div class="transaction-row">
+                    <div class="transaction-info">
+                        <strong>{{ tx.category }}</strong>
+                        <span>{{ tx.transaction_date.strftime('%d.%m.%Y') }}</span>
+                    </div>
+                    <div class="transaction-actions">
+                        <span class="transaction-amount">{{ tx.amount | rub }} ₽</span>
+                        <form method="post" action="{{ url_for('delete_transaction', transaction_id=tx.id) }}"
+                            onsubmit="return confirm('Удалить эту трату?');">
+                            <button type="submit" class="delete-btn">Удалить</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if total_transaction_pages > 1 %}
+            <div class="manage-pagination">
+                {% if transaction_page > 1 %}
+                <a href="{{ url_for('add_transactions', tab='manage', page=transaction_page - 1) }}">Назад</a>
+                {% else %}
+                <span>Назад</span>
+                {% endif %}
+                <strong>{{ transaction_page }} / {{ total_transaction_pages }}</strong>
+                {% if transaction_page < total_transaction_pages %}
+                <a href="{{ url_for('add_transactions', tab='manage', page=transaction_page + 1) }}">Вперёд</a>
+                {% else %}
+                <span>Вперёд</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-manage-state">Пока нет добавленных трат.</div>
+            {% endif %}
+        </section>
+
+        <section class="add-card management-card">
+            <h2>Мои категории</h2>
+            <p class="card-hint">Категорию можно удалить после удаления всех трат внутри неё.</p>
+            {% if user_categories %}
+            <div class="category-manage-list">
+                {% for category in user_categories %}
+                <div class="category-manage-row">
+                    <div>
+                        <strong>{{ category.name }}</strong>
+                        <span>{{ category.transactions_count }} трат</span>
+                    </div>
+                    <form method="post" action="{{ url_for('delete_category') }}"
+                        onsubmit="return confirm('Удалить эту категорию?');">
+                        <input type="hidden" name="category_name" value="{{ category.name }}">
+                        <button type="submit" class="delete-btn" {% if not category.can_delete %}disabled{% endif %}>
+                            Удалить
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-manage-state">Свои категории появятся после добавления нестандартной категории.</div>
+            {% endif %}
+        </section>
+        </div>
+    </div>
 </div>
 
 <script>
     const tabs = document.querySelectorAll('.add-tab');
     const panels = document.querySelectorAll('.add-panel');
 
+    function activateTab(target) {
+        tabs.forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === target);
+            t.setAttribute('aria-selected', t.dataset.tab === target);
+        });
+        panels.forEach(panel => {
+            panel.classList.toggle('active', panel.id === `panel-${target}`);
+        });
+    }
+
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            const target = tab.dataset.tab;
-            tabs.forEach(t => {
-                t.classList.toggle('active', t.dataset.tab === target);
-                t.setAttribute('aria-selected', t.dataset.tab === target);
-            });
-            panels.forEach(panel => {
-                panel.classList.toggle('active', panel.id === `panel-${target}`);
-            });
+            activateTab(tab.dataset.tab);
         });
     });
+
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    if (requestedTab && document.getElementById(`panel-${requestedTab}`)) {
+        activateTab(requestedTab);
+    }
 
     const hasCategories = {{ 'true' if categories else 'false' }};
 

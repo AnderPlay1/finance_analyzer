@@ -68,4 +68,7 @@ dmypy.json
 dataBase.sqlite3
 dataBase.db
 
-/data
+/data/*
+!/data/interface_settings.json
+
+.cursor

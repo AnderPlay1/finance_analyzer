@@ -9,7 +9,9 @@ from sqlalchemy import (
     Numeric,
     String,
     create_engine,
+    inspect,
     literal_column,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -59,6 +61,7 @@ class User(Base):
         Boolean, default=False, server_default=literal_column("0"), nullable=False)
     confirmed: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default=literal_column("0"), nullable=False)
+    gender: Mapped[str] = mapped_column(String(20), nullable=True)
     age: Mapped[int] = mapped_column(Integer, nullable=True)
     income: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
     region: Mapped[str] = mapped_column(String(50), nullable=True)
@@ -105,6 +108,7 @@ class Category(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    owner_user_id: Mapped[int] = mapped_column(Integer, nullable=True)
 
 
 def init_db():
@@ -116,3 +120,70 @@ def init_db():
     """
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+
+
+def ensure_performance_indexes() -> None:
+    """
+    Создаёт индексы для быстрых аналитических запросов, если их ещё нет.
+    """
+    index_specs = {
+        "transactions": {
+            "ix_transactions_user_date_category":
+                "CREATE INDEX ix_transactions_user_date_category "
+                "ON transactions (user_id, transaction_date, category)",
+            "ix_transactions_category_user":
+                "CREATE INDEX ix_transactions_category_user "
+                "ON transactions (category, user_id)",
+        },
+        "users": {
+            "ix_users_region_income_age":
+                "CREATE INDEX ix_users_region_income_age "
+                "ON users (region, income, age)",
+        },
+    }
+
+    try:
+        with engine.begin() as connection:
+            inspector = inspect(connection)
+            for table_name, indexes in index_specs.items():
+                existing_indexes = {
+                    index["name"]
+                    for index in inspector.get_indexes(table_name)
+                }
+                for index_name, statement in indexes.items():
+                    if index_name not in existing_indexes:
+                        try:
+                            connection.execute(text(statement))
+                        except Exception as exc:
+                            if "Duplicate key name" not in str(exc):
+                                raise
+    except Exception as exc:
+        print(f"WARNING: не удалось создать индексы аналитики: {exc}")
+
+
+def ensure_schema_columns() -> None:
+    """
+    Добавляет новые необязательные колонки без пересоздания существующей БД.
+    """
+    column_specs = {
+        "users": {
+            "gender": "ALTER TABLE users ADD COLUMN gender VARCHAR(20)",
+        },
+        "categories": {
+            "owner_user_id": "ALTER TABLE categories ADD COLUMN owner_user_id INTEGER",
+        },
+    }
+
+    try:
+        with engine.begin() as connection:
+            inspector = inspect(connection)
+            for table_name, columns in column_specs.items():
+                existing_columns = {
+                    column["name"]
+                    for column in inspector.get_columns(table_name)
+                }
+                for column_name, statement in columns.items():
+                    if column_name not in existing_columns:
+                        connection.execute(text(statement))
+    except Exception as exc:
+        print(f"WARNING: не удалось обновить схему БД: {exc}")

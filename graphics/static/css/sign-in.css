@@ -63,7 +63,8 @@ form .input-box span.details {
   margin-bottom: 5px;
 }
 
-.user-details .input-box input {
+.user-details .input-box input,
+.user-details .input-box select {
   height: 45px;
   width: 100%;
   outline: none;
@@ -77,6 +78,8 @@ form .input-box span.details {
 
 .user-details .input-box input:focus,
 .user-details .input-box input:valid,
+.user-details .input-box select:focus,
+.user-details .input-box select:valid,
 textarea input:focus,
 textarea .input-box input:valid{
  border-color: #9b59b6;

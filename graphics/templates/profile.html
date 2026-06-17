@@ -61,9 +61,19 @@
                 </div>
 
                 <div class="info-item">
+                    <span class="info-label">Пол:</span>
+                    <select class="info-value" name="gender" disabled>
+                        <option value="" {% if not user.gender %}selected{% endif %}>Не указан</option>
+                        <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Женский</option>
+                        <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Мужской</option>
+                    </select>
+                </div>
+
+                <div class="info-item">
                     <span class="info-label">Заработная плата:</span>
-                    <input class="info-value" type="number" name="income" step="0.01" value="{{ user.income or '' }}"
-                        readonly />
+                    <input class="info-value income-input" type="number" name="income" step="0.01"
+                        value="{{ user.income or '' }}" readonly hidden />
+                    <span class="info-value income-display">{{ (user.income or 0) | rub }} ₽</span>
                 </div>
 
                 <div class="info-item">
@@ -82,21 +92,35 @@
         const inputs = document.querySelectorAll('.info-value');
         const saveBtn = document.getElementById('save-btn');
         const editBtn = document.getElementById('edit-btn');
+        const incomeInput = document.querySelector('.income-input');
+        const incomeDisplay = document.querySelector('.income-display');
 
         if (editBtn.textContent === 'Редактировать') {
             // Включить редактирование
             inputs.forEach(input => {
                 input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
                 input.classList.add('editable');
             });
+            if (incomeInput && incomeDisplay) {
+                incomeInput.hidden = false;
+                incomeDisplay.hidden = true;
+            }
             saveBtn.style.display = 'inline-block';
             editBtn.textContent = 'Отменить';
         } else {
             // Отменить редактирование
             inputs.forEach(input => {
                 input.setAttribute('readonly', true);
+                if (input.tagName === 'SELECT') {
+                    input.setAttribute('disabled', true);
+                }
                 input.classList.remove('editable');
             });
+            if (incomeInput && incomeDisplay) {
+                incomeInput.hidden = true;
+                incomeDisplay.hidden = false;
+            }
             saveBtn.style.display = 'none';
             editBtn.textContent = 'Редактировать';
         }

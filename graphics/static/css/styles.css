@@ -834,6 +834,7 @@ h2.comments-heading {
     display: flex;
     gap: 40px;
     margin-bottom: 30px;
+    min-width: 0;
 }
 
 .avatar-section {
@@ -841,6 +842,7 @@ h2.comments-heading {
     flex-direction: column;
     align-items: center;
     gap: 20px;
+    flex: 0 0 190px;
 }
 
 .avatar-circle {
@@ -868,6 +870,9 @@ h2.comments-heading {
     border-radius: 30px;
     cursor: pointer;
     transition: all 0.3s ease;
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
 }
 
 .edit-btn:hover {
@@ -877,14 +882,19 @@ h2.comments-heading {
 
 .profile-info {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+    min-width: 0;
+}
+
+.profile-info form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 28px;
 }
 
 .info-item {
     border-bottom: 1px solid #eee;
     padding-bottom: 15px;
+    min-width: 0;
 }
 
 .info-label {
@@ -892,20 +902,41 @@ h2.comments-heading {
     color: #7f8c8d;
     font-size: 0.9em;
     margin-bottom: 5px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
 }
 
 .info-value {
+    display: block;
+    width: 100%;
+    max-width: 100%;
     font-size: 1.2em;
     color: #2c3e50;
     margin: 0;
     border: none;
     background: transparent;
     outline: none;
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    line-height: 1.35;
+    min-width: 0;
 }
 
 .info-value.editable {
     border: 1px solid #ccc;
+    border-radius: 10px;
     background: white;
+    padding: 10px 12px;
+}
+
+select.info-value {
+    min-height: 42px;
+}
+
+#save-btn {
+    justify-self: start;
+    grid-column: 1 / -1;
 }
 
 .additional-info {
@@ -946,6 +977,14 @@ h2.comments-heading {
         padding: 25px;
     }
 
+    .avatar-section {
+        flex-basis: auto;
+    }
+
+    .profile-info form {
+        grid-template-columns: 1fr;
+    }
+
     .profile-title {
         font-size: 2em;
     }
@@ -965,5 +1004,9 @@ h2.comments-heading {
 
     .info-value {
         font-size: 1em;
+    }
+
+    .profile-container {
+        padding: 24px 12px;
     }
 }

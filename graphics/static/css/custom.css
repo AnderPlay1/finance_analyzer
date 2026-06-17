@@ -1,5 +1,75 @@
 
 /** ADD YOUR AWESOME CODES HERE **/
+body {
+    background: var(--ui-bg, #fffaf4) !important;
+    color: var(--ui-text, #2c3e50) !important;
+    font-family: var(--ui-font-family, Arial, sans-serif) !important;
+    font-size: var(--ui-font-size, 14px) !important;
+}
+
+.navbar,
+.navbar.bg-dark {
+    background-color: var(--ui-navbar, #292c2f) !important;
+}
+
+a,
+.settings-back {
+    color: var(--ui-accent, #0097a8);
+}
+
+a:hover {
+    color: var(--ui-accent-dark, #007d8a);
+}
+
+.home-card,
+.analytics-card,
+.add-card,
+.saving-card,
+.settings-card,
+.profile-card {
+    background-color: var(--ui-surface, #ffffff) !important;
+}
+
+.btn-add,
+.add-submit,
+.settings-submit,
+.edit-btn,
+.period-select:focus {
+    border-color: var(--ui-accent, #0097a8) !important;
+}
+
+.btn-add,
+.add-submit,
+.settings-submit {
+    background: var(--ui-accent, #0097a8) !important;
+}
+
+.btn-add:hover,
+.add-submit:hover,
+.settings-submit:hover {
+    background: var(--ui-accent-dark, #007d8a) !important;
+}
+
+.home-title,
+.analytics-title,
+.settings-title,
+.add-title,
+.saving-title,
+.profile-title,
+.category-name,
+.regression-metric strong {
+    color: var(--ui-text, #2c3e50) !important;
+}
+
+.home-subtitle,
+.analytics-subtitle,
+.settings-subtitle,
+.card-note,
+.category-pct,
+.regression-note {
+    color: var(--ui-muted, #7f8c8d) !important;
+}
+
 .col {
     padding-left: 0px !important;
 }

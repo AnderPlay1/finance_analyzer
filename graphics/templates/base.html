@@ -19,7 +19,7 @@
     </script>
 </head>
 
-<body>
+<body style="{{ interface_css }}">
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div class="container-fluid">
@@ -39,11 +39,17 @@
                                 <li class="nav-item">
                                     <a class="nav-link js-scroll-trigger" href="/analytics">Аналитика</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link js-scroll-trigger" href="/saving-goal">Цель</a>
+                                </li>
                             </ul>
                         </div>
                     </ul>
                     <ul class="navbar-nav text-uppercase ml-auto">
                         {% if user %}
+                        <li class="nav-item">
+                            <a class="nav-link js-scroll-trigger" href="/settings">Настройки</a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link js-scroll-trigger" href="/dashboard">Личный кабинет</a>
                         </li>

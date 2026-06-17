@@ -61,6 +61,14 @@
     margin-bottom: 24px;
 }
 
+.dynamics-grid {
+    grid-template-columns: 1fr;
+}
+
+.regression-grid {
+    grid-template-columns: 1fr;
+}
+
 .home-card {
     background: #fff;
     border-radius: 20px;
@@ -141,6 +149,8 @@
 }
 
 .chart-card h3,
+.dynamics-card h3,
+.regression-card h3,
 .categories-card h3 {
     margin: 0 0 20px;
     color: #2c3e50;
@@ -155,10 +165,54 @@
     margin: 0 auto;
 }
 
+.wide-chart-wrapper {
+    position: relative;
+    height: 320px;
+    width: 100%;
+}
+
 .empty-state {
     text-align: center;
     padding: 48px 24px;
     color: #7f8c8d;
+}
+
+.compact-empty {
+    padding: 28px 24px;
+}
+
+.regression-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.regression-metric {
+    padding: 18px;
+    border: 1px solid #eef2f4;
+    border-radius: 14px;
+    background: #fbfcfd;
+}
+
+.regression-metric span {
+    display: block;
+    color: #7f8c8d;
+    font-size: 0.9em;
+    margin-bottom: 8px;
+}
+
+.regression-metric strong {
+    display: block;
+    color: #2c3e50;
+    font-size: 1.35em;
+    line-height: 1.2;
+}
+
+.regression-note {
+    margin: 0;
+    color: #5f6f74;
+    line-height: 1.55;
 }
 
 .empty-state-icon {
@@ -244,5 +298,9 @@
 
     .total-amount {
         font-size: 2.2em;
+    }
+
+    .regression-metrics {
+        grid-template-columns: 1fr;
     }
 }

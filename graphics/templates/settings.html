@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+
+<div class="settings-container">
+    <div class="settings-header">
+        <div>
+            <h1 class="settings-title">Настройки интерфейса</h1>
+            <p class="settings-subtitle">Выберите тему, шрифт и размер текста для личного кабинета.</p>
+        </div>
+        <a href="{{ url_for('index') }}" class="settings-back">На главную</a>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="settings-flash">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form class="settings-card" method="post" action="{{ url_for('interface_settings') }}">
+        <section class="settings-section">
+            <h2>Тема</h2>
+            <div class="theme-options">
+                {% for key, theme in theme_presets.items() %}
+                <label class="theme-option">
+                    <input type="radio" name="theme" value="{{ key }}" {% if settings.theme == key %}checked{% endif %}>
+                    <span class="theme-preview" style="--preview-accent: {{ theme.accent }}; --preview-bg: {{ theme.background }}; --preview-navbar: {{ theme.navbar }};">
+                        <span class="preview-bar"></span>
+                        <span class="preview-body">
+                            <span></span>
+                            <span></span>
+                        </span>
+                    </span>
+                    <span class="theme-name">{{ theme.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2>Шрифт</h2>
+            <div class="segmented-options">
+                {% for key, font in font_presets.items() %}
+                <label>
+                    <input type="radio" name="font" value="{{ key }}" {% if settings.font == key %}checked{% endif %}>
+                    <span>{{ font.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <h2>Размер текста</h2>
+            <div class="segmented-options">
+                {% for key, font_size in font_size_presets.items() %}
+                <label>
+                    <input type="radio" name="font_size" value="{{ key }}" {% if settings.font_size == key %}checked{% endif %}>
+                    <span>{{ font_size.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </section>
+
+        <button class="settings-submit" type="submit">Сохранить настройки</button>
+    </form>
+</div>
+{% endblock %}

@@ -244,6 +244,132 @@
     border: 1px solid rgba(0, 151, 168, 0.25);
 }
 
+.management-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.management-card {
+    padding: 28px;
+}
+
+.transactions-list,
+.category-manage-list {
+    display: grid;
+    gap: 12px;
+}
+
+.transaction-row,
+.category-manage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #eef2f4;
+}
+
+.transaction-row:last-child,
+.category-manage-row:last-child {
+    border-bottom: 0;
+}
+
+.transaction-info,
+.category-manage-row > div {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.transaction-info strong,
+.category-manage-row strong {
+    color: #2c3e50;
+}
+
+.transaction-info span,
+.category-manage-row span {
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+}
+
+.transaction-amount {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.delete-btn {
+    border: 1px solid #e57373;
+    border-radius: 18px;
+    background: #fff;
+    color: #c62828;
+    cursor: pointer;
+    font-weight: 700;
+    padding: 8px 14px;
+    transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.delete-btn:hover:not(:disabled) {
+    background: #c62828;
+    color: #fff;
+}
+
+.delete-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.empty-manage-state {
+    padding: 18px;
+    border-radius: 12px;
+    background: #f8fafb;
+    color: #7f8c8d;
+    text-align: center;
+}
+
+.manage-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.manage-pagination a,
+.manage-pagination span,
+.manage-pagination strong {
+    padding: 8px 12px;
+    border-radius: 16px;
+}
+
+.manage-pagination a {
+    background: #eef8f9;
+    color: #0097a8;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.manage-pagination a:hover {
+    background: #0097a8;
+    color: #fff;
+}
+
+.manage-pagination span {
+    color: #95a5a6;
+}
+
+.manage-pagination strong {
+    color: #2c3e50;
+}
+
 @media (max-width: 600px) {
     .add-tabs {
         flex-direction: column;
@@ -251,5 +377,12 @@
 
     .add-card {
         padding: 24px 20px;
+    }
+
+    .transaction-row,
+    .category-manage-row,
+    .transaction-actions {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }

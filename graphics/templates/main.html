@@ -14,14 +14,14 @@
             <label for="month-select">Период:</label>
             <select class="period-select" name="month" id="month-select" aria-label="Месяц">
                 {% for i in range(1, 13) %}
-                <option value="{{ i }}" {% if i == selected_month %}selected{% endif %}>
+                <option value="{{ i }}" {% if i==selected_month %}selected{% endif %}>
                     {{ month_names[i - 1] }}
                 </option>
                 {% endfor %}
             </select>
             <select class="period-select" name="year" id="year-select" aria-label="Год">
                 {% for y in year_options %}
-                <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                <option value="{{ y }}" {% if y==selected_year %}selected{% endif %}>{{ y }}</option>
                 {% endfor %}
             </select>
         </form>
@@ -35,11 +35,69 @@
         </div>
 
         <div class="home-card actions-card">
-            <h3>Добавить данные</h3>
-            <p>Внесите покупку вручную или загрузите выписку в формате CSV для автоматического импорта.</p>
+            <h3>Изменить траты</h3>
+            <p>Внесите покупку вручную, загрузите выписку в формате CSV для автоматического импорта или удалите трату.
+            </p>
             <a href="{{ url_for('add_transactions') }}" class="btn-add">
-                <span>+</span> Добавить траты
+                <span>+</span> Изменить траты
             </a>
+        </div>
+    </div>
+
+    <div class="home-grid dynamics-grid">
+        <div class="home-card dynamics-card">
+            <h3>Динамика расходов за {{ selected_year }} год</h3>
+            {% if has_yearly_dynamics %}
+            <div class="wide-chart-wrapper">
+                <canvas id="spendingLineChart" aria-label="График динамики расходов по месяцам"></canvas>
+            </div>
+            {% else %}
+            <div class="empty-state compact-empty">
+                <div class="empty-state-icon">📈</div>
+                <p>За выбранный год пока нет трат. Добавьте покупки, чтобы увидеть динамику.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="home-grid regression-grid">
+        <div class="home-card regression-card">
+            <h3>Линейная регрессия расходов</h3>
+            {% if regression_analysis.ready %}
+            <div class="regression-metrics">
+                <div class="regression-metric">
+                    <span>Прогноз на {{ regression_analysis.forecast_period }}</span>
+                    <strong>{{ regression_analysis.forecast_amount | rub }} ₽</strong>
+                </div>
+                <div class="regression-metric">
+                    <span>Тренд в месяц</span>
+                    <strong>
+                        {% if regression_analysis.monthly_change > 0 %}+{% endif %}{{ regression_analysis.monthly_change
+                        | rub }} ₽
+                    </strong>
+                </div>
+                <div class="regression-metric">
+                    <span>Месяцев в модели</span>
+                    <strong>{{ regression_analysis.points_count }}</strong>
+                </div>
+            </div>
+            <p class="regression-note">
+                {% if regression_analysis.direction == 'growing' %}
+                Расходы по историческим данным растут. Стоит заранее проверить категории с самым большим вкладом.
+                {% elif regression_analysis.direction == 'decreasing' %}
+                Расходы по историческим данным снижаются. Текущий темп экономии выглядит устойчивым.
+                {% else %}
+                Расходы по историческим данным почти не меняются: модель не видит выраженного роста или падения.
+                {% endif %}
+                {% if regression_analysis.r2_score is not none %}
+                Точность аппроксимации R²: {{ regression_analysis.r2_score }}.
+                {% endif %}
+            </p>
+            {% else %}
+            <div class="empty-state compact-empty">
+                <p>{{ regression_analysis.message }}</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -87,6 +145,67 @@
         </div>
     </div>
 </div>
+
+{% if has_yearly_dynamics %}
+<script>
+    const yearDynamics = {{ yearly_dynamics | tojson }};
+    const monthNames = {{ month_names | tojson }};
+    const dynamicsLabels = yearDynamics.map(item => monthNames[item.month - 1]);
+    const dynamicsAmounts = yearDynamics.map(item => item.amount);
+    const dynamicsCounts = yearDynamics.map(item => item.count);
+
+    new Chart(document.getElementById('spendingLineChart'), {
+        type: 'line',
+        data: {
+            labels: dynamicsLabels,
+            datasets: [{
+                label: 'Расходы, ₽',
+                data: dynamicsAmounts,
+                borderColor: '#0097a8',
+                backgroundColor: 'rgba(0, 151, 168, 0.12)',
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#0097a8',
+                fill: true,
+                tension: 0.32,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback(value) {
+                            return value.toLocaleString('ru-RU') + ' ₽';
+                        },
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    callbacks: {
+                        label(context) {
+                            const amount = context.parsed.y.toLocaleString('ru-RU', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                            const count = dynamicsCounts[context.dataIndex];
+                            return `${amount} ₽, покупок: ${count}`;
+                        },
+                    },
+                },
+            },
+        },
+    });
+</script>
+{% endif %}
 
 {% if summary.categories %}
 <script>
